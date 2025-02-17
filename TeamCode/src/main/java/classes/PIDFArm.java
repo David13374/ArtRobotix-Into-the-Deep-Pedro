@@ -8,13 +8,15 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
 import java.util.concurrent.TimeUnit;
 
 @Config
 public class PIDFArm {
     private PIDController controller;
 
-    public static double p = 0.04, i = 0, d = 0.000385;
+    public static double p = 0.025, i = 0, d = 0.00018;
 
     public static double target = 0;
 
@@ -93,26 +95,46 @@ public class PIDFArm {
     public ElapsedTime time = new ElapsedTime();
     public boolean timerStarted = false;
 
-    public static double retractedVel = -50, retractTime = 0.2;
-    public void retract() {
-        if(!timerStarted) {
-            timerStarted=true;
-            time.reset();
-            time.startTime();
-        }
-        controller.setPID(0, 0, 0);
-        target = 0;
-        armMotorL.setPower(inferiorLimit);
-        armMotorR.setPower(inferiorLimit);
-        if(armMotorL.getVelocity() > retractedVel && time.time(TimeUnit.SECONDS)>retractTime) {
-            resetSliders();
-            armMotorL.setPower(0);
-            armMotorR.setPower(0);
+    public static double resetPosition=20, slideResetWait = 0.1;
+
+    public int slideResetCounter = 0;
+
+    public boolean isResetForRetraction = false;
+    public void retractReset() {
+        if(!isResetForRetraction) {
+            isRetracted = false;
             timerStarted=false;
-            isRetracted = true;
+            isResetForRetraction = true;
         }
     }
+    public void retract() {
+        controller.setPID(0, 0, 0);
+        target = 0;
+        ElapsedTime t1= new ElapsedTime();
+        if(!isRetracted()) {
+            armMotorL.setPower(inferiorLimit);
+            armMotorR.setPower(inferiorLimit);
+        }
+        if(armMotorL.getVelocity()<0.000000001 && armMotorL.getCurrentPosition()<resetPosition && !isRetracted) {
+            isRetracted = true;
+            armMotorL.setPower(-0.1);
+            armMotorR.setPower(-0.1);
+            if(!timerStarted) {
+                t1.reset();
+                t1.startTime();
+                timerStarted=true;
+            }
+        }
+        if(timerStarted && t1.time(TimeUnit.SECONDS)>slideResetWait) {
+            resetSliders();
+            slideResetCounter++;
+        }
 
+    }
+
+    public double getPowerDraw() {
+        return armMotorL.getCurrent(CurrentUnit.AMPS)+armMotorR.getCurrent(CurrentUnit.AMPS);
+    }
     public boolean isRetracted() {
         return isRetracted;
     }

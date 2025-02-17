@@ -69,6 +69,8 @@ public class Robot2025 extends LinearOpMode {
             telemetry.addData("currentSlidePos", fsm.PIDF.getArmPosL());
             telemetry.addData("currentSlideVel", fsm.PIDF.getVelocity());
             telemetry.addData("Current State", fsm.returnState());
+            telemetry.addData("retracted", fsm.PIDF.isRetracted());
+            telemetry.addData("resetCounter", fsm.PIDF.slideResetCounter);
             telemetry.addData("fps", fps);
             telemetry.update();
 

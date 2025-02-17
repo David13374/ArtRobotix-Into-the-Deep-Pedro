@@ -32,6 +32,8 @@ public class PIDFArmTest extends LinearOpMode {
             telemetry.addData("currentPos", pidfArm.getArmPosL());
             telemetry.addData("targetPos", target);
             telemetry.addData("power", pidfArm.getPower());
+            telemetry.addData("velocity", pidfArm.getVelocity());
+            telemetry.addData("amps", pidfArm.getPowerDraw());
             telemetry.addData("fps", fps);
             telemetry.update();
         }

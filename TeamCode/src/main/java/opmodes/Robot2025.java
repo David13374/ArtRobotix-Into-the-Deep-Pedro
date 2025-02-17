@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import classes.DTMove;
 import classes.FSM;
+import classes.HzMonitor;
+
 @TeleOp(name = "Robot2025")
 @Config
 public class Robot2025 extends LinearOpMode {
@@ -20,11 +22,12 @@ public class Robot2025 extends LinearOpMode {
     GamepadEx GamepadEx2;
     GamepadEx GamepadEx1;
 
+    HzMonitor hz;
     FSM fsm;
 
     @Override
     public void runOpMode() {
-
+        hz = new HzMonitor();
 
         fsm = new FSM(hardwareMap);
         dtMove = new DTMove(hardwareMap);
@@ -43,11 +46,11 @@ public class Robot2025 extends LinearOpMode {
 
         waitForStart();
         while(opModeIsActive()) {
-
+            double fps = hz.update();
 
             dtMove.Move(gamepad1);
             fsm.update(GamepadEx2, GamepadEx1);
-            telemetry.addData("gamepad", gamepad2);
+            /*telemetry.addData("gamepad", gamepad2);
             telemetry.addData("heading", dtMove.getHeading());
             telemetry.addData("theta", dtMove.getTheta());
             telemetry.addData("position", dtMove.getPosition());
@@ -58,13 +61,15 @@ public class Robot2025 extends LinearOpMode {
             telemetry.addData("Claw", fsm.ClawState());
             telemetry.addData("Extendo Pos", fsm.ExtendoValue());
             telemetry.addData("timer", fsm.getTimer());
-            telemetry.addLine();
-            telemetry.addData("slides pos R", fsm.PIDF.getArmPosR());
+            telemetry.addLine();*/
+            //telemetry.addData("slides pos R", fsm.PIDF.getArmPosR());
             telemetry.addData("slides pos L", fsm.PIDF.getArmPosL());
             telemetry.addData("target pos", fsm.PIDF.getTarget());
-            telemetry.update();
-
-
+            telemetry.addData("slidesPower", fsm.PIDF.getPower());
+            telemetry.addData("currentSlidePos", fsm.PIDF.getArmPosL());
+            telemetry.addData("currentSlideVel", fsm.PIDF.getVelocity());
+            telemetry.addData("Current State", fsm.returnState());
+            telemetry.addData("fps", fps);
             telemetry.update();
 
             GamepadEx2.readButtons();

@@ -72,7 +72,7 @@ public class FSM {
     public static final double openpos = 0.5, closepos = 0;
     motorInit r;
     public FSM(HardwareMap hardwareMap) {
-        PIDF = new PIDFArm(hardwareMap, -0.4, 1, false);
+        PIDF = new PIDFArm(hardwareMap, true);
         r = new motorInit(hardwareMap);
         ClawIntake = r.ClawIntake;
         ClawOuttake = r.ClawOuttake;
@@ -360,13 +360,15 @@ public class FSM {
             case RETURNING:
 
                 if (transfert.time(TimeUnit.SECONDS) > RotatingTime) {
-                    PIDF.setTarget(0);
+                    PIDF.retract();
                 }
 
-                if (transfert.time(TimeUnit.SECONDS) > ReqTimeToReturn)
+                if (PIDF.isRetracted()) {
+
                     currentState = robotState.READY;
+                }
                 break;
         }
-        PIDF.update();
+        if(currentState != robotState.RETURNING) PIDF.update();
     }
 }

@@ -6,12 +6,15 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import java.util.concurrent.TimeUnit;
 
 @Config
 public class PIDFArm {
-    private PIDController controllerL, controllerR;
+    private PIDController controller;
 
-    public static double p = 0.02, i = 0, d = 0.00006, f = 0;
+    public static double p = 0.04, i = 0, d = 0.000385;
 
     public static double target = 0;
 
@@ -19,14 +22,15 @@ public class PIDFArm {
 
     public DcMotorEx armMotorL, armMotorR;
 
-    public static double inferiorLimit, superiorLimit;
-    public PIDFArm(HardwareMap hardwareMap, double inferiorLimit1, double superiorLimit1, boolean resetEncoder) {
+    public static double ff = 0.12, retractedTolerance = 2;
+    double power;
 
-        controllerL = new PIDController(p, i, d);
-        controllerR = new PIDController(p, i, d);
+    public static double inferiorLimit = -0.73, superiorLimit=1;
+    public PIDFArm(HardwareMap hardwareMap, boolean resetEncoder) {
 
-        inferiorLimit = inferiorLimit1;
-        superiorLimit = superiorLimit1;
+        controller = new PIDController(p, i, d);
+        //controllerR = new PIDController(p, i, d);
+
 
         armMotorL = hardwareMap.get(DcMotorEx.class, "armMotorL");
         armMotorR = hardwareMap.get(DcMotorEx.class, "armMotorR");
@@ -55,31 +59,61 @@ public class PIDFArm {
     public int getArmPosL() { return armMotorL.getCurrentPosition(); }
 
     public int getArmPosR() { return armMotorR.getCurrentPosition(); }
+    public double getPower() {return power;}
+    public double getVelocity(){return armMotorL.getVelocity();}
 
     public void update() {
+        isRetracted = false;
+        controller.setPID(p, i, d);
+        double appliedFF;
 
-        controllerL.setPID(p, i, d);
-        controllerR.setPID(p, i, d);
-
+        if(target >= 100) {
+            controller.setTolerance(0);
+            appliedFF = ff;
+        }
+        else {
+            controller.setTolerance(retractedTolerance);
+            appliedFF = 0;
+        }
         int armPosL = getArmPosL();
-        int armPosR = getArmPosR();
 
-        double pidL = controllerL.calculate(armPosL, target);
-        double pidR = controllerR.calculate(armPosR, target);
+        double pid = controller.calculate(armPosL, target);
 
-        double ff = Math.cos(Math.toRadians(target / ticks_in_degrees)) * f;
+        power = pid + appliedFF;
 
-        double powerL = pidL + ff;
-        double powerR = pidR + ff;
-
-        powerL = Math.max(inferiorLimit, powerL);
-        powerR = Math.max(inferiorLimit, powerR);
-
-        powerL = Math.min(superiorLimit, powerL);
-        powerR = Math.min(superiorLimit, powerR);
-        armMotorL.setPower(powerL);
-        armMotorR.setPower(powerR);
+        power = Math.max(inferiorLimit, power);
+        power = Math.min(superiorLimit, power);
+        armMotorL.setPower(power);
+        armMotorR.setPower(power);
         //armMotorR.setPower(power);
 
+    }
+
+    public static boolean isRetracted = false;
+    public ElapsedTime time = new ElapsedTime();
+    public boolean timerStarted = false;
+
+    public static double retractedVel = -50, retractTime = 0.2;
+    public void retract() {
+        if(!timerStarted) {
+            timerStarted=true;
+            time.reset();
+            time.startTime();
+        }
+        controller.setPID(0, 0, 0);
+        target = 0;
+        armMotorL.setPower(inferiorLimit);
+        armMotorR.setPower(inferiorLimit);
+        if(armMotorL.getVelocity() > retractedVel && time.time(TimeUnit.SECONDS)>retractTime) {
+            resetSliders();
+            armMotorL.setPower(0);
+            armMotorR.setPower(0);
+            timerStarted=false;
+            isRetracted = true;
+        }
+    }
+
+    public boolean isRetracted() {
+        return isRetracted;
     }
 }

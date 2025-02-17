@@ -108,7 +108,7 @@ public class DTMove {
 
         }
         pinpoint.update();
-        setMotorPowers(coef*front_left_motor, coef*back_left_motor, coef*back_right_motor, coef*front_right_motor);
+        setMotorPowers(coef*front_left_motor, coef*back_left_motor, coef*front_right_motor, coef*back_right_motor);
     }
 
     public double getTheta() {

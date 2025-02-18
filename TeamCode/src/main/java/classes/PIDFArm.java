@@ -99,13 +99,10 @@ public class PIDFArm {
 
     public int slideResetCounter = 0;
 
-    public boolean isResetForRetraction = false;
+    //public boolean isResetForRetraction = false;
     public void retractReset() {
-        if(!isResetForRetraction) {
-            isRetracted = false;
-            timerStarted=false;
-            isResetForRetraction = true;
-        }
+        isRetracted = false;
+        timerStarted=false;
     }
     public void retract() {
         controller.setPID(0, 0, 0);

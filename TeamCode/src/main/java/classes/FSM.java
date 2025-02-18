@@ -358,14 +358,15 @@ public class FSM {
                 }
                 break;
             case RETURNING:
-                PIDF.retractReset();
+
                 if (transfert.time(TimeUnit.SECONDS) > RotatingTime) {
                     PIDF.retract();
                 }
 
                 if (PIDF.isRetracted()) {
                     currentState = robotState.READY;
-                    PIDF.isResetForRetraction = false;
+                    //PIDF.isResetForRetraction = false;
+                    PIDF.retractReset();
                 }
                 break;
         }

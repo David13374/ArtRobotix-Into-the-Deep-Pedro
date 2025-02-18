@@ -65,7 +65,7 @@ public class Robot2025 extends LinearOpMode {
             telemetry.addData("timer", fsm.getTimer());
             telemetry.addLine();*/
             //telemetry.addData("slides pos R", fsm.PIDF.getArmPosR());
-            int bruj = fsm.PIDF.bruh ? 1 : 0;
+            /*int bruj = fsm.PIDF.bruh ? 1 : 0;
             telemetry.addData("slides pos L", fsm.PIDF.getArmPosL());
             telemetry.addData("target pos", fsm.PIDF.getTarget());
             telemetry.addData("slidesPower", fsm.PIDF.getPower());
@@ -79,7 +79,7 @@ public class Robot2025 extends LinearOpMode {
             telemetry.addData("iHaveReset", fsm.PIDF.iHaveReset ? 1:0);
             telemetry.addData("timerStarted", fsm.PIDF.timerStarted);
             telemetry.addData("fps", fps);
-            telemetry.update();
+            telemetry.update();*/
 
             GamepadEx2.readButtons();
             GamepadEx1.readButtons();

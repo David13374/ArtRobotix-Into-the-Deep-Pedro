@@ -107,7 +107,7 @@ public class DTMove {
             reset_gyro();
 
         }
-        pinpoint.update();
+        pinpoint.update(GoBildaPinpointDriver.readData.ONLY_UPDATE_HEADING);
         setMotorPowers(coef*front_left_motor, coef*back_left_motor, coef*front_right_motor, coef*back_right_motor);
     }
 

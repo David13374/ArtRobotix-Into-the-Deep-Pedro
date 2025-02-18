@@ -12,6 +12,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import java.util.concurrent.TimeUnit;
 
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
+
 @Config
 public class PIDFArm {
     private PIDController controller;
@@ -34,8 +36,8 @@ public class PIDFArm {
         //controllerR = new PIDController(p, i, d);
         t1= new ElapsedTime();
 
-        armMotorL = hardwareMap.get(DcMotorEx.class, "armMotorL");
-        armMotorR = hardwareMap.get(DcMotorEx.class, "armMotorR");
+        armMotorL = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "armMotorL"));
+        armMotorR = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "armMotorR"));
 
         if(resetEncoder) {
             resetSliders();

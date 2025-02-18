@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import java.util.concurrent.TimeUnit;
+
 import classes.DTMove;
 import classes.FSM;
 import classes.HzMonitor;
@@ -63,14 +65,19 @@ public class Robot2025 extends LinearOpMode {
             telemetry.addData("timer", fsm.getTimer());
             telemetry.addLine();*/
             //telemetry.addData("slides pos R", fsm.PIDF.getArmPosR());
+            int bruj = fsm.PIDF.bruh ? 1 : 0;
             telemetry.addData("slides pos L", fsm.PIDF.getArmPosL());
             telemetry.addData("target pos", fsm.PIDF.getTarget());
             telemetry.addData("slidesPower", fsm.PIDF.getPower());
             telemetry.addData("currentSlidePos", fsm.PIDF.getArmPosL());
             telemetry.addData("currentSlideVel", fsm.PIDF.getVelocity());
             telemetry.addData("Current State", fsm.returnState());
-            telemetry.addData("retracted", fsm.PIDF.isRetracted());
+            telemetry.addData("retracted", fsm.PIDF.isRetracted()?1:0);
             telemetry.addData("resetCounter", fsm.PIDF.slideResetCounter);
+            telemetry.addData("resetTimer", fsm.PIDF.t1.time(TimeUnit.MILLISECONDS));
+            telemetry.addData("bruh", bruj);
+            telemetry.addData("iHaveReset", fsm.PIDF.iHaveReset ? 1:0);
+            telemetry.addData("timerStarted", fsm.PIDF.timerStarted);
             telemetry.addData("fps", fps);
             telemetry.update();
 

@@ -28,7 +28,7 @@ public class FSM {
 
     public static double AxialServoOuttakeTransferPos = 1, ArmServoTransferPos = 0.82;
     public static double AxialServoOuttakeBasketPos = 0.15, ArmServoBasketPos = 0.6;
-    public static double LowSpecimenPos = 200, HighSpecimenPos = 380, LowBasketPos = 700, HighBasketPos = 1100;
+    public static double LowSpecimenPos = 200, HighSpecimenPos = 420, LowBasketPos = 700, HighBasketPos = 1100;
     public static double AxialServoOuttakeSpecimenPos = 0.15, ArmServoSpecimenPos = 0.6;
 
     public double extendedpos = 0.3, retractedpos = 0;
@@ -123,14 +123,14 @@ public class FSM {
             retractButton = GamepadKeys.Button.LEFT_BUMPER;
     GamepadKeys.Trigger openclaw = GamepadKeys.Trigger.RIGHT_TRIGGER,
             closeclaw = GamepadKeys.Trigger.LEFT_TRIGGER;
-    public static double reqTime = 0.3, reqTime2 = 0.9, timeDoneTotal = 1.2, SpecimenTime = 1, ServoTime = 1, RotatingTime = 0.25, TimeReqFromBasket = 1;
+    public static double reqTime = 0.3, reqTime2 = 0.5, timeDoneTotal = 1.2, SpecimenTime = 1, ServoTime = 1, RotatingTime = 0.25, TimeReqFromBasket = 1;
 
-    public static double highBasketTime = 0.5, lowBasketTime = 0.1;
+    public static double highBasketTime = 0.05, lowBasketTime = 0.03;
     public static double ReqTimeToReturn = 3, ReqTimeToReturnFromHighB = 0.5, ReqTimeToReturnFromLowB = 0.1, ReqTimeToReturnFromHighS = 0.3, ReqTimeToReturnFromLowS = 0.1, ReqTimeToPlaceSpecimen = 3;
     GoingToWhere GoingToSpecimen = GoingToWhere.No;
     public static double ArmServoPos = 0.45, AxialServoOuttakePos = 0.3;
-    public static double TicksToRiseSpecimen = 250;
-    public static double clawOpenTime = 0.05, timeToRaise = 0.2;
+    public static double TicksToRiseSpecimen = 125;
+    public static double clawOpenTime = 0.05, timeToRaise = 0.1;
     public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.6, ClawVerticalGrabPos = 0;
     public static double PosReq = 0, reqTimeA;
     public static final double difference = 0.01;

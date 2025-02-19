@@ -37,7 +37,7 @@ public class DTMove {
     motorInit r;
     public DTMove(HardwareMap hardwareMap) {
         r = new motorInit(hardwareMap);
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         pinpoint.getPosition().getHeading(AngleUnit.RADIANS);
     }
 

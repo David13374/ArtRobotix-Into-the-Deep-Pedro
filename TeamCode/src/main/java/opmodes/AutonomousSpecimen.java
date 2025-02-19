@@ -1,5 +1,6 @@
 package opmodes;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.pathgen.BezierCurve;
@@ -12,16 +13,20 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import java.util.concurrent.TimeUnit;
+
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
 
 @Autonomous
+@Config
 public class AutonomousSpecimen extends OpMode {
 
     public static PathBuilder builder;
-    public static PathChain line1, line2, line3, line4;
+    public static PathChain line1, line2, line3, line4, line5, line6;
 
     public static Follower follower;
+    public static double path5Time = 1;
 
     public static int pathState = 0;
     private final Pose startPose = new Pose(7.5, 72, Math.toRadians(180));
@@ -50,6 +55,42 @@ public class AutonomousSpecimen extends OpMode {
             case 3:
                 if (!follower.isBusy()) {
                     follower.followPath(line4, true);
+                    setPathState(4);
+                }
+                break;
+            case 4:
+                if (!follower.isBusy()) {
+                    follower.followPath(line5, true);
+                    setPathState(5);
+                }
+                break;
+            case 5:
+                if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
+                    follower.followPath(line6, true);
+                    setPathState(6);
+                }
+                break;
+            case 6:
+                if (!follower.isBusy()) {
+                    follower.followPath(line5, true);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+                if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
+                    follower.followPath(line6, true);
+                    setPathState(8);
+                }
+                break;
+            case 8:
+                if (!follower.isBusy()) {
+                    follower.followPath(line5, true);
+                    setPathState(9);
+                }
+                break;
+            case 9:
+                if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
+                    follower.followPath(line6, true);
                     setPathState(-1);
                 }
                 break;
@@ -69,9 +110,9 @@ public class AutonomousSpecimen extends OpMode {
         line2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Point(39.701, 72.000, Point.CARTESIAN),
-                                new Point(2.019, 40.598, Point.CARTESIAN),
-                                new Point(60.112, 41.720, Point.CARTESIAN),
+                                new Point(30.000, 72.000, Point.CARTESIAN),
+                                new Point(28.229, 9.914, Point.CARTESIAN),
+                                new Point(40.495, 56.961, Point.CARTESIAN),
                                 new Point(62.131, 22.430, Point.CARTESIAN)
                         )
                 )
@@ -79,7 +120,7 @@ public class AutonomousSpecimen extends OpMode {
                 .addPath(
                         new BezierLine(
                                 new Point(62.131, 22.430, Point.CARTESIAN),
-                                new Point(10, 22.430, Point.CARTESIAN)
+                                new Point(14, 22.430, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -87,41 +128,53 @@ public class AutonomousSpecimen extends OpMode {
         line3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Point(10.000, 22.430, Point.CARTESIAN),
+                                new Point(14, 22.430, Point.CARTESIAN),
                                 new Point(50.744, 39.487, Point.CARTESIAN),
                                 new Point(62.674, 17.139, Point.CARTESIAN)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                         new BezierLine(
                                 new Point(62.674, 17.139, Point.CARTESIAN),
-                                new Point(10, 17.139, Point.CARTESIAN)
+                                new Point(14, 17.139, Point.CARTESIAN)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         line4 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Point(10.000, 17.139, Point.CARTESIAN),
+                                new Point(14, 17.139, Point.CARTESIAN),
                                 new Point(47.720, 32.429, Point.CARTESIAN),
-                                new Point(63.851, 9.082, Point.CARTESIAN)
+                                new Point(63.851, 10.582, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                         new BezierLine(
-                                new Point(63.851, 9.082, Point.CARTESIAN),
-                                new Point(10, 9.082, Point.CARTESIAN)
+                                new Point(63.851, 10.582, Point.CARTESIAN),
+                                new Point(14, 10.582, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+        line5 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Point(10, 9.082, Point.CARTESIAN),
-                        new Point(15, 35, Point.CARTESIAN)
-                ))
+                                new Point(14, 10.582, Point.CARTESIAN),
+                                new Point(15, 35, Point.CARTESIAN)
+                        )
+                )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+        line6 = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Point(15, 35, Point.CARTESIAN),
+                                new Point(30, 67, Point.CARTESIAN)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
                 .build();
     }
 

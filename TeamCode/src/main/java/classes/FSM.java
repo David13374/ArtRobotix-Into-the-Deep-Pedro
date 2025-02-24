@@ -28,7 +28,7 @@ public class FSM {
 
     public static double AxialServoOuttakeTransferPos = 0.99, ArmServoTransferPos = 0.82;
     public static double AxialServoOuttakeBasketPos = 0.15, ArmServoBasketPos = 0.6;
-    public static double LowSpecimenPos = 0, HighSpecimenPos = 420, LowBasketPos = 550, HighBasketPos = 1100;
+    public static double LowSpecimenPos = 0, HighSpecimenPos = 400, LowBasketPos = 550, HighBasketPos = 1100;
     public static double AxialServoOuttakeSpecimenPos = 0.15, ArmServoSpecimenPos = 0.6;
 
     public double extendedpos = 0.3, retractedpos = 0;
@@ -123,14 +123,14 @@ public class FSM {
             retractButton = GamepadKeys.Button.LEFT_BUMPER;
     GamepadKeys.Trigger openclaw = GamepadKeys.Trigger.RIGHT_TRIGGER,
             closeclaw = GamepadKeys.Trigger.LEFT_TRIGGER;
-    public static double reqTime = 0.1, reqTime2 = 1, timeDoneTotal = 1.55, SpecimenTime = 1, ServoTime = 1, RotatingTime = 0, TimeReqFromBasket = 1;
+    public static double reqTime = 1, reqTime2 = 1, timeDoneTotal = 1.55, SpecimenTime = 1, ServoTime = 1, RotatingTime = 0, TimeReqFromBasket = 1;
 
     public static double highBasketTime = 0.05, lowBasketTime = 0.03;
     public static double ReqTimeToReturn = 0.05, ReqTimeToReturnFromHighB = 0, ReqTimeToReturnFromLowB = 0, ReqTimeToReturnFromHighS = 0.3, ReqTimeToReturnFromLowS = 0.1, ReqTimeToPlaceSpecimen = 3;
     GoingToWhere GoingToSpecimen = GoingToWhere.No;
     public static double ArmServoPos = 0.45, AxialServoOuttakePos = 0.3;
     public static double TicksToRiseSpecimen = 125;
-    public static double clawOpenTime = 0, timeToRaise = 0.1;
+    public static double clawOpenTime = 0, timeToRaise = 125;
     public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.6, ClawVerticalGrabPos = 0;
     public static double PosReq = 420, reqTimeA;
     public static final double difference = 0.01;
@@ -222,17 +222,17 @@ public class FSM {
                 GoingToSpecimen = GoingToWhere.No;
                 break;
             case MOVING:
-                if (transfert.time(TimeUnit.SECONDS) > reqTime) {
+                if (transfert.seconds() > reqTime) {
                     AxialServoOuttake.setPosition(AxialServoOuttakeTransferPos);
                     ArmServo.setPosition(ArmServoTransferPos);
                     ClawOuttake.setPosition(openpos);
                 }
 
-                if (transfert.time(TimeUnit.SECONDS) > reqTime2) {
+                if (transfert.seconds() > reqTime2) {
                     ClawOuttake.setPosition(closepos);
                 }
 
-                if (transfert.time(TimeUnit.SECONDS) > timeDoneTotal) {
+                if (transfert.seconds() > timeDoneTotal) {
                     ClawIntake.setPosition(openpos);
                     currentState = robotState.WAITINGINPUT;
                 }
@@ -287,14 +287,14 @@ public class FSM {
                 break;
             case SLIDERSMOVING:
                 if(reset) {
-                    if(transfert.time(TimeUnit.SECONDS) > RotatingTime) {
+                    if(transfert.seconds() > RotatingTime) {
                         ClawOuttake.setPosition(openpos);
                         if(!pressedButton) {
                             pressedButton = true;
                             transfert.reset();
                             transfert.startTime();
                         }
-                        if(transfert.time(TimeUnit.SECONDS) > clawOpenTime) {
+                        if(transfert.seconds() > clawOpenTime) {
                             AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
                             ArmServo.setPosition(ArmServoInitPos);
                             transfert.reset();
@@ -325,9 +325,9 @@ public class FSM {
                         }
                     }*/
                     if (pressedButton) {
-                        if (timer2.time(TimeUnit.SECONDS) > timeToRaise)
+                        if (timer2.time(TimeUnit.MILLISECONDS) > timeToRaise)
                             ClawOuttake.setPosition(openpos);
-                        if (timer2.time(TimeUnit.SECONDS) > timeToRaise + clawOpenTime) {
+                        if (timer2.seconds() > clawOpenTime) {
                             AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
                             ArmServo.setPosition(ArmServoInitPos);
                             transfert.reset();
@@ -336,7 +336,7 @@ public class FSM {
                         }
                     }
                 } else {
-                    if (transfert.time(TimeUnit.SECONDS) > reqTimeA) {
+                    if (transfert.seconds() > reqTimeA) {
                         AxialServoOuttake.setPosition(AxialServoOuttakeBasketPos);
                         ArmServo.setPosition(ArmServoBasketPos);
                         if (driver2gamepad.wasJustPressed(ReleaseButton)) {
@@ -345,7 +345,7 @@ public class FSM {
                             pressedButton = true;
                             ClawOuttake.setPosition(openpos);
                         }
-                        if (pressedButton && timer2.time(TimeUnit.SECONDS) > clawOpenTime) {
+                        if (pressedButton && timer2.seconds() > clawOpenTime) {
                             AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
                             ArmServo.setPosition(ArmServoInitPos);
                             currentState = robotState.RETURNING;
@@ -359,7 +359,7 @@ public class FSM {
                 break;
             case RETURNING:
 
-                if (transfert.time(TimeUnit.SECONDS) > RotatingTime) {
+                if (transfert.seconds() > RotatingTime) {
                     PIDF.retract();
                 }
 

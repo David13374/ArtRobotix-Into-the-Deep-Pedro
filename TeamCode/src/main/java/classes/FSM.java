@@ -84,8 +84,8 @@ public class FSM {
         ExtensionL =r.ExtensionL;
         ExtensionR = r.ExtensionR;
 
-        transfert = new ElapsedTime();
-        timer2 = new ElapsedTime();
+        transfert = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timer2.reset();
     }
 
@@ -123,14 +123,14 @@ public class FSM {
             retractButton = GamepadKeys.Button.LEFT_BUMPER;
     GamepadKeys.Trigger openclaw = GamepadKeys.Trigger.RIGHT_TRIGGER,
             closeclaw = GamepadKeys.Trigger.LEFT_TRIGGER;
-    public static double reqTime = 1, reqTime2 = 1.1, timeDoneTotal = 1.55, SpecimenTime = 1, ServoTime = 1, RotatingTime = 0, TimeReqFromBasket = 1;
+    public static double reqTime = 0, reqTime2 = 0.15, timeDoneTotal = 0.3, RotatingTime = 0.5;
 
-    public static double highBasketTime = 0.05, lowBasketTime = 0.03;
-    public static double ReqTimeToReturn = 0.05, ReqTimeToReturnFromHighB = 0, ReqTimeToReturnFromLowB = 0, ReqTimeToReturnFromHighS = 0.3, ReqTimeToReturnFromLowS = 0.1, ReqTimeToPlaceSpecimen = 3;
+    public static double highBasketTime = 0.1, lowBasketTime = 0.1;
+
     GoingToWhere GoingToSpecimen = GoingToWhere.No;
-    public static double ArmServoPos = 0.45, AxialServoOuttakePos = 0.3;
+
     public static double TicksToRiseSpecimen = 125;
-    public static double clawOpenTime = 0, timeToRaise = 125;
+    public static double clawOpenTime = 0.1, timeToRaise = 0.125;
     public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.6, ClawVerticalGrabPos = 0;
     public static double PosReq = 420, reqTimeA;
     public static final double difference = 0.01;
@@ -138,7 +138,6 @@ public class FSM {
 
     public static final double AxialServoMultiplier = -0.01, ExtendoServoMultiplier = -0.008;
     static double currenetwristpos;
-    public static double resetTime = 0.05;
     public static final double extendomin = 0.15, extendomax = 0.4;
 
     static boolean wristup = true, pressedButton = false, specimenButton = false, PIDFdiff = false, reset = false;
@@ -240,7 +239,6 @@ public class FSM {
             case WAITINGINPUT:
                 if(driver2gamepad.wasJustPressed(ResetTransferButton)) {
                     reset = true;
-                    ReqTimeToReturn = resetTime;
                     AxialServoOuttake.setPosition(AxialServoOuttakeBasketPos);
                     ArmServo.setPosition(ArmServoBasketPos);
                     transfert.reset();
@@ -252,7 +250,6 @@ public class FSM {
                     AxialServoOuttake.setPosition(AxialServoOuttakeSpecimenPos);
                     ArmServo.setPosition(ArmServoSpecimenPos);
                     GoingToSpecimen = GoingToWhere.HighSpecimen;
-                    ReqTimeToReturn = ReqTimeToReturnFromHighS;
                     transfert.reset();
                     transfert.startTime();
                     currentState = robotState.SLIDERSMOVING;
@@ -263,13 +260,11 @@ public class FSM {
                     ArmServo.setPosition(ArmServoSpecimenPos);
                     GoingToSpecimen = GoingToWhere.LowSpecimen;
                     PIDF.setTarget(LowBasketPos);
-                    ReqTimeToReturn = ReqTimeToReturnFromLowS;
                     currentState = robotState.SLIDERSMOVING;
                     transfert.reset();
                     transfert.startTime();
                 }
                 if (driver2gamepad.wasJustPressed(highbasketbutton)) {
-                    ReqTimeToReturn = ReqTimeToReturnFromHighB;
                     PIDF.setTarget(HighBasketPos);
                     currentState = robotState.SLIDERSMOVING;
                     reqTimeA = highBasketTime;
@@ -277,7 +272,6 @@ public class FSM {
                     transfert.startTime();
                 }
                 if (driver2gamepad.wasJustPressed(lowbasketbutton)) {
-                    ReqTimeToReturn = ReqTimeToReturnFromLowB;
                     PIDF.setTarget(LowBasketPos);
                     currentState = robotState.SLIDERSMOVING;
                     reqTimeA = lowBasketTime;
@@ -325,7 +319,7 @@ public class FSM {
                         }
                     }*/
                     if (pressedButton) {
-                        if (timer2.time(TimeUnit.MILLISECONDS) > timeToRaise)
+                        if (timer2.seconds() > timeToRaise)
                             ClawOuttake.setPosition(openpos);
                         if (timer2.seconds() > clawOpenTime) {
                             AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);

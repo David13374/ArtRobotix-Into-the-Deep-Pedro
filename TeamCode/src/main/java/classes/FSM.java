@@ -123,7 +123,7 @@ public class FSM {
             retractButton = GamepadKeys.Button.LEFT_BUMPER;
     GamepadKeys.Trigger openclaw = GamepadKeys.Trigger.RIGHT_TRIGGER,
             closeclaw = GamepadKeys.Trigger.LEFT_TRIGGER;
-    public static double reqTime = 1, reqTime2 = 1, timeDoneTotal = 1.55, SpecimenTime = 1, ServoTime = 1, RotatingTime = 0, TimeReqFromBasket = 1;
+    public static double reqTime = 1, reqTime2 = 1.1, timeDoneTotal = 1.55, SpecimenTime = 1, ServoTime = 1, RotatingTime = 0, TimeReqFromBasket = 1;
 
     public static double highBasketTime = 0.05, lowBasketTime = 0.03;
     public static double ReqTimeToReturn = 0.05, ReqTimeToReturnFromHighB = 0, ReqTimeToReturnFromLowB = 0, ReqTimeToReturnFromHighS = 0.3, ReqTimeToReturnFromLowS = 0.1, ReqTimeToPlaceSpecimen = 3;

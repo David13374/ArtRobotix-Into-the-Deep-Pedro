@@ -125,7 +125,7 @@ public class FSM {
             closeclaw = GamepadKeys.Trigger.LEFT_TRIGGER;
     public static double reqTime = 0, reqTime2 = 0.15, timeDoneTotal = 0.3, RotatingTime = 0.5;
 
-    public static double highBasketTime = 0.1, lowBasketTime = 0.1;
+    public static double highBasketTime = 0.10, lowBasketTime = 0.1;
 
     GoingToWhere GoingToSpecimen = GoingToWhere.No;
 

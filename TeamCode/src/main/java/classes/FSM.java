@@ -5,33 +5,19 @@ import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import java.util.concurrent.TimeUnit;
-
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import constants.motorInit;
+import constants.functions;
+import classes.Intake;
 
 @Config
-public class FSM {
-
-    public static final int tolerance = 10;
+public class FSM extends functions {
     public PIDFArm PIDF;
-    boolean extended = false, clawstate = true;
-
-    ServoImplEx ClawOuttake, AxialServoOuttake, ArmServo;
-
-    ServoImplEx ClawIntake, ClawRotate, ClawVertical, AxialServoIntake, ExtensionR, ExtensionL;
-
-    public static double ClawIntakeInitPos = 0.3, ClawRotateInitPos = 0.63, ClawVerticalInitPos = 0.9, AxialServoIntakeInitPos = 0.1, ExtensionInitPos = 0, ClawOuttakeInitPos = 0.8, AxialServoOuttakeInitPos = 0.8, ArmServoInitPos = 0.77;
-    public static double ClawRotateTransferPos = 0.021, ClawVerticalTransferPos = 0.95, AxialServoIntakeTransferPos = 0.15;
-
-    public static double AxialServoOuttakeTransferPos = 0.99, ArmServoTransferPos = 0.82;
-    public static double AxialServoOuttakeBasketPos = 0.15, ArmServoBasketPos = 0.6;
+    Intake Extendo;
+    boolean extended = false;
     public static double LowSpecimenPos = 0, HighSpecimenPos = 400, LowBasketPos = 550, HighBasketPos = 1100;
-    public static double AxialServoOuttakeSpecimenPos = 0.15, ArmServoSpecimenPos = 0.6;
-
-    public double extendedpos = 0.3, retractedpos = 0;
 
     enum robotState {
         READY,
@@ -39,7 +25,6 @@ public class FSM {
         WAITINGINPUT,
         SLIDERSMOVING,
         RETURNING,
-        RESET
     }
 
     public void resetSliders() {
@@ -56,60 +41,21 @@ public class FSM {
     robotState currentState = robotState.READY;
 
     public void init() {
-        ClawIntake.setPosition(ClawIntakeInitPos);
-        ClawOuttake.setPosition(ClawOuttakeInitPos);
-        ClawRotate.setPosition(ClawRotateInitPos);
-        ClawVertical.setPosition(ClawVerticalInitPos);
-        AxialServoIntake.setPosition(AxialServoIntakeInitPos);
-        AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
-        ArmServo.setPosition(ArmServoInitPos);
-        ExtensionL.setPosition(ExtensionInitPos);
-        ExtensionR.setPosition(ExtensionInitPos);
         PIDF.setTarget(0);
         currentState = robotState.READY;
     }
-
-    public static final double openpos = 0.5, closepos = 0;
     motorInit r;
     public FSM(HardwareMap hardwareMap) {
         PIDF = new PIDFArm(hardwareMap, true);
         r = new motorInit(hardwareMap);
-        ClawIntake = r.ClawIntake;
-        ClawOuttake = r.ClawOuttake;
-        ClawRotate = r.ClawRotate;
-        ClawVertical = r.ClawVertical;
-        AxialServoIntake = r.AxialServoIntake;
-        AxialServoOuttake = r.AxialServoOuttake;
-        ArmServo = r. ArmServo;
-        ExtensionL =r.ExtensionL;
-        ExtensionR = r.ExtensionR;
+        Extendo = new Intake(r.ExtensionL, r.ExtensionR, r.ClawIntake, r.ClawRotate, r.ClawVertical, r.AxialServoIntake);
 
         transfert = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timer2.reset();
     }
 
-    public robotState returnState() {
-        return currentState;
-    }
-
-    public boolean isExtended() {
-        return extended;
-    }
-
-    public boolean ClawState() {
-        return clawstate;
-    }
-
-    public double ExtendoValue() {
-        return extendedpos2;
-    }
-
-    public double getTimer() {
-        return timer2.time();
-    }
-
-    GamepadKeys.Button //extendbutton = GamepadKeys.Button.A,
+    GamepadKeys.Button
             extendbuttonspecimen = GamepadKeys.Button.LEFT_BUMPER,
             transferbutton = GamepadKeys.Button.DPAD_DOWN,
             specimenhighbutton = GamepadKeys.Button.DPAD_UP,
@@ -119,8 +65,7 @@ public class FSM {
             specimenbutton = GamepadKeys.Button.RIGHT_BUMPER,
             wristupbutton = GamepadKeys.Button.X,
             ReleaseButton = GamepadKeys.Button.LEFT_BUMPER,
-            ResetTransferButton = GamepadKeys.Button.DPAD_LEFT,
-            retractButton = GamepadKeys.Button.LEFT_BUMPER;
+            ResetTransferButton = GamepadKeys.Button.DPAD_LEFT;
     GamepadKeys.Trigger openclaw = GamepadKeys.Trigger.RIGHT_TRIGGER,
             closeclaw = GamepadKeys.Trigger.LEFT_TRIGGER;
     public static double reqTime = 0, reqTime2 = 0.15, timeDoneTotal = 0.3, RotatingTime = 0.5;
@@ -131,89 +76,35 @@ public class FSM {
 
     public static double TicksToRiseSpecimen = 125;
     public static double clawOpenTime = 0.1, timeToRaise = 0.125;
-    public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.6, ClawVerticalGrabPos = 0;
     public static double PosReq = 420, reqTimeA;
-    public static final double difference = 0.01;
-    double extendedpos2 = extendedpos;
-
-    public static final double AxialServoMultiplier = -0.01, ExtendoServoMultiplier = -0.008;
-    static double currenetwristpos;
-    public static final double extendomin = 0.15, extendomax = 0.4;
-
-    static boolean wristup = true, pressedButton = false, specimenButton = false, PIDFdiff = false, reset = false;
+    static boolean wristup = true, pressedButton = false, PIDFdiff = false, reset = false;
 
     public void update(GamepadEx driver2gamepad, GamepadEx driver1gamepad) {
         switch (currentState) {
             case READY:
                 if (driver1gamepad.wasJustPressed(extendbuttonspecimen)) {
-                    if (extended) {
-                        AxialServoIntake.setPosition(AxialServoIntakeTransferPos);
-                        if (specimenButton) {
-                            ClawRotate.setPosition(0.01);
-                        } else
-                            ClawRotate.setPosition(ClawRotateTransferPos);
-                        ClawVertical.setPosition(ClawVerticalTransferPos);
-                        ExtensionL.setPosition(retractedpos);
-                        ExtensionR.setPosition(retractedpos + difference);
-                        wristup = true;
-                    } else {
-                        specimenButton = driver1gamepad.wasJustPressed(extendbuttonspecimen);
-                        currenetwristpos = 0.61;
-                        ExtensionL.setPosition(extendedpos);
-                        ExtensionR.setPosition(extendedpos + difference);
-                    }
-                    extendedpos2 = extendedpos;
+                    Extendo.updateState();
                     extended = !extended;
                 }
 
                 if (extended) {
                     if (driver1gamepad.wasJustPressed(wristupbutton))
-                        wristup = !wristup;
+                        Extendo.updateWristState();
 
-                    if (wristup) {
-                        ClawVertical.setPosition(ClawVerticalGrabPos);
-                        AxialServoIntake.setPosition(AxialServoIntakeUpPos);
-                    } else {
-                        ClawVertical.setPosition(ClawVerticalGrabPos);
-                        AxialServoIntake.setPosition(AxialServoIntakeDownPos);
-                    }
-                    currenetwristpos += driver1gamepad.getRightX() * AxialServoMultiplier;
-                    if (currenetwristpos < 0)
-                        currenetwristpos = 0;
-                    if (currenetwristpos > 1)
-                        currenetwristpos = 1;
-                    ClawRotate.setPosition(currenetwristpos);
-                    extendedpos2 += driver1gamepad.getRightY() * ExtendoServoMultiplier;
-                    if (extendedpos2 < extendomin)
-                        extendedpos2 = extendomin;
-                    if (extendedpos2 > extendomax)
-                        extendedpos2 = extendomax;
-                    ExtensionL.setPosition(extendedpos2);
-                    ExtensionR.setPosition(extendedpos2 + difference);
+                    Extendo.update(driver1gamepad);
                 }
                 if (driver2gamepad.getTrigger(openclaw) != 0)
-                    ClawIntake.setPosition(openpos);
+                    openIntakeClaw();
                 if (driver2gamepad.getTrigger(closeclaw) != 0)
-                    ClawIntake.setPosition(closepos);
+                    closeOuttakeClaw();
                 if (driver2gamepad.wasJustPressed(transferbutton)) {
                     PIDFdiff = false;
                     reset = false;
-                    if (extended) {
-                        extended = false;
-                        wristup = true;
-                        ExtensionL.setPosition(retractedpos);
-                        ExtensionR.setPosition(retractedpos + difference);
-                    }
-                    if (specimenButton) {
-                        specimenButton = false;
-                        ClawRotate.setPosition(0.01);
-                    } else
-                        ClawRotate.setPosition(ClawRotateTransferPos);
+                    wristup = false;
                     pressedButton = false;
-                    AxialServoIntake.setPosition(AxialServoIntakeTransferPos);
-                    //ClawRotate.setPosition(ClawRotateTransferPos);
-                    ClawOuttake.setPosition(openpos);
-                    ClawVertical.setPosition(ClawVerticalTransferPos);
+                    extended = false;
+                    Extendo.retract();
+                    openOuttakeClaw();
                     transfert.reset();
                     transfert.startTime();
                     currentState = robotState.MOVING;
@@ -222,33 +113,29 @@ public class FSM {
                 break;
             case MOVING:
                 if (transfert.seconds() > reqTime) {
-                    AxialServoOuttake.setPosition(AxialServoOuttakeTransferPos);
-                    ArmServo.setPosition(ArmServoTransferPos);
-                    ClawOuttake.setPosition(openpos);
+                    setOuttakeTransfer();
                 }
 
                 if (transfert.seconds() > reqTime2) {
-                    ClawOuttake.setPosition(closepos);
+                    closeOuttakeClaw();
                 }
 
                 if (transfert.seconds() > timeDoneTotal) {
-                    ClawIntake.setPosition(openpos);
+                    openIntakeClaw();
                     currentState = robotState.WAITINGINPUT;
                 }
                 break;
             case WAITINGINPUT:
                 if(driver2gamepad.wasJustPressed(ResetTransferButton)) {
                     reset = true;
-                    AxialServoOuttake.setPosition(AxialServoOuttakeBasketPos);
-                    ArmServo.setPosition(ArmServoBasketPos);
+                    setBasketPos();
                     transfert.reset();
                     transfert.startTime();
                     currentState = robotState.SLIDERSMOVING;
                 }
                 if (driver2gamepad.wasJustPressed(specimenhighbutton)) {
                     PosReq = HighSpecimenPos;
-                    AxialServoOuttake.setPosition(AxialServoOuttakeSpecimenPos);
-                    ArmServo.setPosition(ArmServoSpecimenPos);
+                    setSpecimenPos();
                     GoingToSpecimen = GoingToWhere.HighSpecimen;
                     transfert.reset();
                     transfert.startTime();
@@ -256,8 +143,7 @@ public class FSM {
                 }
                 if (driver2gamepad.wasJustPressed(specimenlowbutton)) {
                     PosReq = LowSpecimenPos;
-                    AxialServoOuttake.setPosition(AxialServoOuttakeSpecimenPos);
-                    ArmServo.setPosition(ArmServoSpecimenPos);
+                    setSpecimenPos();
                     GoingToSpecimen = GoingToWhere.LowSpecimen;
                     PIDF.setTarget(LowBasketPos);
                     currentState = robotState.SLIDERSMOVING;
@@ -282,15 +168,14 @@ public class FSM {
             case SLIDERSMOVING:
                 if(reset) {
                     if(transfert.seconds() > RotatingTime) {
-                        ClawOuttake.setPosition(openpos);
+                        openOuttakeClaw();
                         if(!pressedButton) {
                             pressedButton = true;
                             transfert.reset();
                             transfert.startTime();
                         }
                         if(transfert.seconds() > clawOpenTime) {
-                            AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
-                            ArmServo.setPosition(ArmServoInitPos);
+                            resetOuttake();
                             transfert.reset();
                             transfert.startTime();
                             currentState = robotState.RETURNING;
@@ -320,10 +205,9 @@ public class FSM {
                     }*/
                     if (pressedButton) {
                         if (timer2.seconds() > timeToRaise)
-                            ClawOuttake.setPosition(openpos);
+                            openOuttakeClaw();
                         if (timer2.seconds() > clawOpenTime) {
-                            AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
-                            ArmServo.setPosition(ArmServoInitPos);
+                            resetOuttake();
                             transfert.reset();
                             transfert.startTime();
                             currentState = robotState.RETURNING;
@@ -331,17 +215,15 @@ public class FSM {
                     }
                 } else {
                     if (transfert.seconds() > reqTimeA) {
-                        AxialServoOuttake.setPosition(AxialServoOuttakeBasketPos);
-                        ArmServo.setPosition(ArmServoBasketPos);
+                        setBasketPos();
                         if (driver2gamepad.wasJustPressed(ReleaseButton)) {
                             timer2.reset();
                             timer2.startTime();
                             pressedButton = true;
-                            ClawOuttake.setPosition(openpos);
+                            openOuttakeClaw();
                         }
                         if (pressedButton && timer2.seconds() > clawOpenTime) {
-                            AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
-                            ArmServo.setPosition(ArmServoInitPos);
+                            resetOuttake();
                             currentState = robotState.RETURNING;
                             transfert.reset();
                             transfert.startTime();

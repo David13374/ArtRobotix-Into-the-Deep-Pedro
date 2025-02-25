@@ -1,11 +1,12 @@
 package constants;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import constants.motorInit;
+@Config
 public class functions {
 
-    motorInit r;
+    robotInit r;
     public static double AxialServoOuttakeBasketPos = 0.15, ArmServoBasketPos = 0.6;
     public static double AxialServoOuttakeSpecimenPos = 0.15, ArmServoSpecimenPos = 0.6;
     public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.6, ClawVerticalGrabPos = 0;
@@ -23,6 +24,11 @@ public class functions {
         r.ClawOuttake.setPosition(closepos);
     }
 
+    public functions(HardwareMap hmap) {
+        r = new robotInit(robotInit.init.SERVO, hmap);
+    }
+
+    public functions() {}
     public void setIntakeTransfer() {
         r.AxialServoIntake.setPosition(AxialServoIntakeTransferPos);
         r.ClawRotate.setPosition(ClawRotateTransferPos);

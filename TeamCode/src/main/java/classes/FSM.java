@@ -5,17 +5,15 @@ import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import constants.motorInit;
+import constants.robotInit;
 import constants.functions;
-import classes.Intake;
 
 @Config
 public class FSM extends functions {
     public PIDFArm PIDF;
-    Intake Extendo;
+    Intake Intake;
     boolean extended = false;
     public static double LowSpecimenPos = 0, HighSpecimenPos = 400, LowBasketPos = 550, HighBasketPos = 1100;
 
@@ -25,6 +23,7 @@ public class FSM extends functions {
         WAITINGINPUT,
         SLIDERSMOVING,
         RETURNING,
+        HARDRESET
     }
 
     public void resetSliders() {
@@ -44,11 +43,10 @@ public class FSM extends functions {
         PIDF.setTarget(0);
         currentState = robotState.READY;
     }
-    motorInit r;
+    robotInit r;
     public FSM(HardwareMap hardwareMap) {
         PIDF = new PIDFArm(hardwareMap, true);
-        r = new motorInit(hardwareMap);
-        Extendo = new Intake(r.ExtensionL, r.ExtensionR, r.ClawIntake, r.ClawRotate, r.ClawVertical, r.AxialServoIntake);
+        Intake = new Intake(hardwareMap);
 
         transfert = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -65,62 +63,70 @@ public class FSM extends functions {
             specimenbutton = GamepadKeys.Button.RIGHT_BUMPER,
             wristupbutton = GamepadKeys.Button.X,
             ReleaseButton = GamepadKeys.Button.LEFT_BUMPER,
-            ResetTransferButton = GamepadKeys.Button.DPAD_LEFT;
+            ResetTransferButton = GamepadKeys.Button.DPAD_LEFT,
+            HardResetButton = GamepadKeys.Button.RIGHT_STICK_BUTTON;
     GamepadKeys.Trigger openclaw = GamepadKeys.Trigger.RIGHT_TRIGGER,
             closeclaw = GamepadKeys.Trigger.LEFT_TRIGGER;
     public static double reqTime = 0, reqTime2 = 0.15, timeDoneTotal = 0.3, RotatingTime = 0.5;
-
     public static double highBasketTime = 0.10, lowBasketTime = 0.1;
-
     GoingToWhere GoingToSpecimen = GoingToWhere.No;
-
     public static double TicksToRiseSpecimen = 125;
-    public static double clawOpenTime = 0.1, timeToRaise = 0.125;
+    public static double clawOpenTime = 0.1, timeToRaise = 0.125, retractTime = 0.4;
     public static double PosReq = 420, reqTimeA;
     static boolean wristup = true, pressedButton = false, PIDFdiff = false, reset = false;
 
     public void update(GamepadEx driver2gamepad, GamepadEx driver1gamepad) {
+        if(PIDF.getTarget() < 100) {
+            if (driver1gamepad.wasJustPressed(extendbuttonspecimen)) {
+                Intake.updateState();
+                extended = !extended;
+            }
+
+            if (extended) {
+                if (driver1gamepad.wasJustPressed(wristupbutton))
+                    Intake.updateWristState();
+
+                Intake.update(driver1gamepad);
+            }
+        }
+        if(driver2gamepad.wasJustPressed(HardResetButton))
+            currentState = robotState.HARDRESET;
         switch (currentState) {
             case READY:
-                if (driver1gamepad.wasJustPressed(extendbuttonspecimen)) {
-                    Extendo.updateState();
-                    extended = !extended;
-                }
-
-                if (extended) {
-                    if (driver1gamepad.wasJustPressed(wristupbutton))
-                        Extendo.updateWristState();
-
-                    Extendo.update(driver1gamepad);
-                }
                 if (driver2gamepad.getTrigger(openclaw) != 0)
                     openIntakeClaw();
                 if (driver2gamepad.getTrigger(closeclaw) != 0)
                     closeOuttakeClaw();
+
                 if (driver2gamepad.wasJustPressed(transferbutton)) {
                     PIDFdiff = false;
                     reset = false;
                     wristup = false;
                     pressedButton = false;
-                    extended = false;
-                    Extendo.retract();
+                    GoingToSpecimen = GoingToWhere.No;
                     openOuttakeClaw();
                     transfert.reset();
-                    transfert.startTime();
                     currentState = robotState.MOVING;
                 }
-                GoingToSpecimen = GoingToWhere.No;
                 break;
             case MOVING:
-                if (transfert.seconds() > reqTime) {
+                if(extended) {
+                    Intake.retract();
+                    if(transfert.seconds() > retractTime) {
+                        transfert.reset();
+                        extended = false;
+                    }
+                }
+
+                if (!extended && transfert.seconds() > reqTime) {
                     setOuttakeTransfer();
                 }
 
-                if (transfert.seconds() > reqTime2) {
+                if (!extended && transfert.seconds() > reqTime2) {
                     closeOuttakeClaw();
                 }
 
-                if (transfert.seconds() > timeDoneTotal) {
+                if (!extended && transfert.seconds() > timeDoneTotal) {
                     openIntakeClaw();
                     currentState = robotState.WAITINGINPUT;
                 }
@@ -130,7 +136,6 @@ public class FSM extends functions {
                     reset = true;
                     setBasketPos();
                     transfert.reset();
-                    transfert.startTime();
                     currentState = robotState.SLIDERSMOVING;
                 }
                 if (driver2gamepad.wasJustPressed(specimenhighbutton)) {
@@ -138,7 +143,6 @@ public class FSM extends functions {
                     setSpecimenPos();
                     GoingToSpecimen = GoingToWhere.HighSpecimen;
                     transfert.reset();
-                    transfert.startTime();
                     currentState = robotState.SLIDERSMOVING;
                 }
                 if (driver2gamepad.wasJustPressed(specimenlowbutton)) {
@@ -148,21 +152,18 @@ public class FSM extends functions {
                     PIDF.setTarget(LowBasketPos);
                     currentState = robotState.SLIDERSMOVING;
                     transfert.reset();
-                    transfert.startTime();
                 }
                 if (driver2gamepad.wasJustPressed(highbasketbutton)) {
                     PIDF.setTarget(HighBasketPos);
                     currentState = robotState.SLIDERSMOVING;
                     reqTimeA = highBasketTime;
                     transfert.reset();
-                    transfert.startTime();
                 }
                 if (driver2gamepad.wasJustPressed(lowbasketbutton)) {
                     PIDF.setTarget(LowBasketPos);
                     currentState = robotState.SLIDERSMOVING;
                     reqTimeA = lowBasketTime;
                     transfert.reset();
-                    transfert.startTime();
                 }
                 break;
             case SLIDERSMOVING:
@@ -172,12 +173,10 @@ public class FSM extends functions {
                         if(!pressedButton) {
                             pressedButton = true;
                             transfert.reset();
-                            transfert.startTime();
                         }
                         if(transfert.seconds() > clawOpenTime) {
                             resetOuttake();
                             transfert.reset();
-                            transfert.startTime();
                             currentState = robotState.RETURNING;
                         }
                     }
@@ -192,14 +191,13 @@ public class FSM extends functions {
                         PIDF.setTarget(PosReq + TicksToRiseSpecimen);
                         if (!pressedButton) {
                             timer2.reset();
-                            timer2.startTime();
                             pressedButton = true;
                         }
                     }
                     /*if (driver2gamepad.wasJustPressed(retractButton)) {
                         if (!pressedButton) {
                             timer2.reset();
-                            timer2.startTime();
+                            timer2.();
                             pressedButton = true;
                         }
                     }*/
@@ -209,16 +207,15 @@ public class FSM extends functions {
                         if (timer2.seconds() > clawOpenTime) {
                             resetOuttake();
                             transfert.reset();
-                            transfert.startTime();
                             currentState = robotState.RETURNING;
                         }
                     }
                 } else {
                     if (transfert.seconds() > reqTimeA) {
+                        Intake.setExtendoPos();
                         setBasketPos();
                         if (driver2gamepad.wasJustPressed(ReleaseButton)) {
                             timer2.reset();
-                            timer2.startTime();
                             pressedButton = true;
                             openOuttakeClaw();
                         }
@@ -226,7 +223,6 @@ public class FSM extends functions {
                             resetOuttake();
                             currentState = robotState.RETURNING;
                             transfert.reset();
-                            transfert.startTime();
                             timer2.reset();
                             pressedButton = false;
                         }
@@ -234,7 +230,6 @@ public class FSM extends functions {
                 }
                 break;
             case RETURNING:
-
                 if (transfert.seconds() > RotatingTime) {
                     PIDF.retract();
                 }
@@ -242,6 +237,15 @@ public class FSM extends functions {
                 if (PIDF.isRetracted()) {
                     currentState = robotState.READY;
                     //PIDF.isResetForRetraction = false;
+                    PIDF.retractReset();
+                }
+                break;
+            case HARDRESET:
+                Intake.retract();
+                resetOuttake();
+                PIDF.retract();
+                if (PIDF.isRetracted()) {
+                    currentState = robotState.READY;
                     PIDF.retractReset();
                 }
                 break;

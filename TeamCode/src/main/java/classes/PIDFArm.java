@@ -34,7 +34,7 @@ public class PIDFArm {
 
         controller = new PIDController(p, i, d);
         //controllerR = new PIDController(p, i, d);
-        t1= new ElapsedTime();
+        t1 = new ElapsedTime();
 
         armMotorL = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "armMotorL"));
         armMotorR = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "armMotorR"));
@@ -62,6 +62,7 @@ public class PIDFArm {
     public int getArmPosL() { return armMotorL.getCurrentPosition(); }
 
     public int getArmPosR() { return armMotorR.getCurrentPosition(); }
+
     public double getPower() {return power;}
     public double getVelocity(){return armMotorL.getVelocity();}
 

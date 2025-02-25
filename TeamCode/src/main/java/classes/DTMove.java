@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import constants.motorInit;
+import constants.robotInit;
 
 @Config
 public class DTMove {
@@ -34,9 +34,9 @@ public class DTMove {
 
     GoBildaPinpointDriver pinpoint;
 
-    motorInit r;
+    robotInit r;
     public DTMove(HardwareMap hardwareMap) {
-        r = new motorInit(hardwareMap);
+        r = new robotInit(robotInit.init.MOTORS, hardwareMap);
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         pinpoint.getPosition().getHeading(AngleUnit.RADIANS);
     }

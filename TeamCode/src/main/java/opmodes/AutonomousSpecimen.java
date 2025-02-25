@@ -17,12 +17,14 @@ import java.util.concurrent.TimeUnit;
 
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
+import constants.functions;
 
 @Autonomous
 @Config
 public class AutonomousSpecimen extends OpMode {
 
     public static PathBuilder builder;
+    public functions f;
     public static PathChain line1, line2, line3, line4, line5, line6;
 
     public static Follower follower;

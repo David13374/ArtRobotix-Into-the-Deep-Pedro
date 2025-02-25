@@ -6,12 +6,19 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
+import java.util.concurrent.TimeUnit;
+
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 
 @Config
 public class PIDFArm {
-    private PIDController controllerL, controllerR;
-
-    public static double p = 0.02, i = 0, d = 0.00006, f = 0;
+    private PIDController controller;
+    public static double LowSpecimenPos = 0, HighSpecimenPos = 400, LowBasketPos = 550, HighBasketPos = 1100;
+    public static double p = 0.025, i = 0, d = 0.00018;
 
     public static double target = 0;
 
@@ -19,17 +26,26 @@ public class PIDFArm {
 
     public DcMotorEx armMotorL, armMotorR;
 
-    public static double inferiorLimit, superiorLimit;
-    public PIDFArm(HardwareMap hardwareMap, double inferiorLimit1, double superiorLimit1, boolean resetEncoder) {
+    public static double ff = 0.12, retractedTolerance = 2;
+    double power;
+    public ElapsedTime t1;
+    public static double inferiorLimit = -0.73, superiorLimit=1;
+    public static double TicksToRiseSpecimen = 125;
 
-        controllerL = new PIDController(p, i, d);
-        controllerR = new PIDController(p, i, d);
+    public enum Positions {
+        HIGH_BASKET,
+        LOW_BASKET,
+        HIGH_SPECIMEN,
+        LOW_SPECIMEN
+    }
+    public PIDFArm(HardwareMap hardwareMap, boolean resetEncoder) {
 
-        inferiorLimit = inferiorLimit1;
-        superiorLimit = superiorLimit1;
+        controller = new PIDController(p, i, d);
+        //controllerR = new PIDController(p, i, d);
+        t1 = new ElapsedTime();
 
-        armMotorL = hardwareMap.get(DcMotorEx.class, "armMotorL");
-        armMotorR = hardwareMap.get(DcMotorEx.class, "armMotorR");
+        armMotorL = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "armMotorL"));
+        armMotorR = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "armMotorR"));
 
         if(resetEncoder) {
             resetSliders();
@@ -41,45 +57,111 @@ public class PIDFArm {
     public void resetSliders() {
         armMotorL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armMotorR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
         armMotorR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         armMotorL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
-
     public void setTarget(double newTarget) {
         target = newTarget;
     }
-
     public double getTarget() {return target;}
-
     public int getArmPosL() { return armMotorL.getCurrentPosition(); }
-
     public int getArmPosR() { return armMotorR.getCurrentPosition(); }
 
+    public double getPower() { return power; }
+    public double getVelocity(){ return armMotorL.getVelocity(); }
+    public void addPosSpec() { target += TicksToRiseSpecimen; }
+    public void setTarget(Positions Pos) {
+        switch(Pos) {
+            case LOW_BASKET:
+                setTarget(LowBasketPos);
+                break;
+            case HIGH_BASKET:
+                setTarget(Positions.HIGH_BASKET);
+                break;
+            case LOW_SPECIMEN:
+                setTarget(Positions.LOW_SPECIMEN);
+                break;
+            case HIGH_SPECIMEN:
+                setTarget(Positions.HIGH_SPECIMEN);
+                break;
+        }
+    }
+
     public void update() {
+        bruh= false;
+        isRetracted = false;
+        controller.setPID(p, i, d);
+        double appliedFF;
 
-        controllerL.setPID(p, i, d);
-        controllerR.setPID(p, i, d);
-
+        if(target >= 100) {
+            controller.setTolerance(0);
+            appliedFF = ff;
+        }
+        else {
+            controller.setTolerance(retractedTolerance);
+            appliedFF = 0;
+        }
         int armPosL = getArmPosL();
-        int armPosR = getArmPosR();
+        double pid;
+        if(iHaveReset) pid = controller.calculate(armPosL-7, target);
+        else pid = controller.calculate(armPosL, target);
 
-        double pidL = controllerL.calculate(armPosL, target);
-        double pidR = controllerR.calculate(armPosR, target);
+        power = pid + appliedFF;
 
-        double ff = Math.cos(Math.toRadians(target / ticks_in_degrees)) * f;
-
-        double powerL = pidL + ff;
-        double powerR = pidR + ff;
-
-        powerL = Math.max(inferiorLimit, powerL);
-        powerR = Math.max(inferiorLimit, powerR);
-
-        powerL = Math.min(superiorLimit, powerL);
-        powerR = Math.min(superiorLimit, powerR);
-        armMotorL.setPower(powerL);
-        armMotorR.setPower(powerR);
+        power = Math.max(inferiorLimit, power);
+        power = Math.min(superiorLimit, power);
+        armMotorL.setPower(power);
+        armMotorR.setPower(power);
         //armMotorR.setPower(power);
 
+    }
+
+    public boolean isRetracted = false;
+    public ElapsedTime time = new ElapsedTime();
+    public boolean timerStarted = false;
+
+    public static double resetPosition=20, slideResetWait = 200;
+
+    public int slideResetCounter = 0;
+
+    //public boolean isResetForRetraction = false;
+    public void retractReset() {
+        isRetracted = false;
+        timerStarted=false;
+    }
+
+    public boolean bruh;
+    public boolean iHaveReset = false;
+    public void retract() {
+        controller.setPID(0, 0, 0);
+        target = 0;
+        bruh = armMotorL.getVelocity()<0.000000001 && armMotorL.getCurrentPosition()<resetPosition;
+        if(!timerStarted) {
+            armMotorL.setPower(inferiorLimit);
+            armMotorR.setPower(inferiorLimit);
+        }
+        if(bruh) {
+            armMotorL.setPower(-0.1);
+            armMotorR.setPower(-0.1);
+            if(!timerStarted) {
+                t1.reset();
+                timerStarted=true;
+            }
+        }
+
+        if(timerStarted && t1.time(TimeUnit.MILLISECONDS)>slideResetWait) {
+            resetSliders();
+            iHaveReset = true;
+            slideResetCounter++;
+            timerStarted=false;
+            isRetracted = true;
+        }
+    }
+
+    public double getPowerDraw() {
+        return armMotorL.getCurrent(CurrentUnit.AMPS)+armMotorR.getCurrent(CurrentUnit.AMPS);
+    }
+    public boolean isRetracted() {
+        return isRetracted;
     }
 }

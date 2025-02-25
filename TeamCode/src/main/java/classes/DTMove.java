@@ -1,6 +1,7 @@
 package classes;
 
 import com.pedropathing.localization.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.dashboard.config.Config;
@@ -8,16 +9,16 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import constants.motorInit;
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 
 @Config
 public class DTMove {
 
     public void setMotorPowers(double front_left_motor ,double back_left_motor, double front_right_motor, double back_right_motor) {
-        r.leftFront.setPower(front_left_motor);
-        r.leftBack.setPower(back_left_motor);
-        r.rightFront.setPower(front_right_motor);
-        r.rightBack.setPower(back_right_motor);
+        leftFront.setPower(front_left_motor);
+        leftBack.setPower(back_left_motor);
+        rightFront.setPower(front_right_motor);
+        rightBack.setPower(back_right_motor);
     }
     IMU imu;
     //GoBildaPinpointDriver odo;
@@ -34,11 +35,30 @@ public class DTMove {
 
     GoBildaPinpointDriver pinpoint;
 
-    motorInit r;
+    DcMotorEx leftFront, leftBack, rightFront, rightBack;
     public DTMove(HardwareMap hardwareMap) {
-        r = new motorInit(hardwareMap);
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         pinpoint.getPosition().getHeading(AngleUnit.RADIANS);
+
+        leftFront = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "leftFront"));
+        leftBack = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "leftRear"));
+        rightFront = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rightFront"));
+        rightBack = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class, "rightRear"));
+
+        leftFront.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        rightFront.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+
+        leftFront.setDirection(DcMotorEx.Direction.REVERSE);
+        leftBack.setDirection(DcMotorEx.Direction.REVERSE);
+        rightFront.setDirection(DcMotorEx.Direction.FORWARD);
+        rightBack.setDirection(DcMotorEx.Direction.FORWARD);
+
+        leftBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
     }
 
     public double getHeading() {
@@ -54,9 +74,6 @@ public class DTMove {
         return pinpoint.getPosition();
     }
     public void Move(Gamepad currentGamepad1) {
-
-        if(currentGamepad1.b) driverCentric=true;
-        else if(currentGamepad1.a) driverCentric=false;
 
         if (currentGamepad1.right_bumper) {
             coef = 0.65;
@@ -103,12 +120,12 @@ public class DTMove {
             back_left_motor /= power - turn;
             back_right_motor /= power - turn;
         }
-        if(currentGamepad1.y) {
+        if(currentGamepad1.left_stick_button) {
             reset_gyro();
 
         }
-        pinpoint.update();
-        setMotorPowers(coef*front_left_motor, coef*back_left_motor, coef*back_right_motor, coef*front_right_motor);
+        pinpoint.update(GoBildaPinpointDriver.readData.ONLY_UPDATE_HEADING);
+        setMotorPowers(coef*front_left_motor, coef*back_left_motor, coef*front_right_motor, coef*back_right_motor);
     }
 
     public double getTheta() {
@@ -122,5 +139,7 @@ public class DTMove {
     public void reset_gyro() {
         gyro_offset = getHeading();
     }
+
+    public void setRobotCentric() { driverCentric = false; }
 
 }

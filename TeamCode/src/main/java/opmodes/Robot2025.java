@@ -4,10 +4,12 @@ import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import classes.DTMove;
@@ -26,6 +28,7 @@ public class Robot2025 extends LinearOpMode {
 
     HzMonitor hz;
     FSM fsm;
+    List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
     @Override
     public void runOpMode() {
@@ -42,9 +45,14 @@ public class Robot2025 extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         dtMove.resetOdoIMU();
 
-        /*while(opModeInInit()) {
-            if(gamepad2.)
-        }*/
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+
+        while(opModeInInit()) {
+            if(gamepad1.a)
+                dtMove.setRobotCentric();
+        }
 
         waitForStart();
         while(opModeIsActive()) {
@@ -52,6 +60,8 @@ public class Robot2025 extends LinearOpMode {
 
             dtMove.Move(gamepad1);
             fsm.update(GamepadEx2, GamepadEx1);
+            telemetry.addData("hz", fps);
+            telemetry.update();
             /*telemetry.addData("gamepad", gamepad2);
             telemetry.addData("heading", dtMove.getHeading());
             telemetry.addData("theta", dtMove.getTheta());

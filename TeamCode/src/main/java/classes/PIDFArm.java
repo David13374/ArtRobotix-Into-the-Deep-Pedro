@@ -17,7 +17,7 @@ import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 @Config
 public class PIDFArm {
     private PIDController controller;
-
+    public static double LowSpecimenPos = 0, HighSpecimenPos = 400, LowBasketPos = 550, HighBasketPos = 1100;
     public static double p = 0.025, i = 0, d = 0.00018;
 
     public static double target = 0;
@@ -30,6 +30,14 @@ public class PIDFArm {
     double power;
     public ElapsedTime t1;
     public static double inferiorLimit = -0.73, superiorLimit=1;
+    public static double TicksToRiseSpecimen = 125;
+
+    public enum Positions {
+        HIGH_BASKET,
+        LOW_BASKET,
+        HIGH_SPECIMEN,
+        LOW_SPECIMEN
+    }
     public PIDFArm(HardwareMap hardwareMap, boolean resetEncoder) {
 
         controller = new PIDController(p, i, d);
@@ -52,19 +60,32 @@ public class PIDFArm {
         armMotorR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         armMotorL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
-
     public void setTarget(double newTarget) {
         target = newTarget;
     }
-
     public double getTarget() {return target;}
-
     public int getArmPosL() { return armMotorL.getCurrentPosition(); }
-
     public int getArmPosR() { return armMotorR.getCurrentPosition(); }
 
-    public double getPower() {return power;}
-    public double getVelocity(){return armMotorL.getVelocity();}
+    public double getPower() { return power; }
+    public double getVelocity(){ return armMotorL.getVelocity(); }
+    public void addPosSpec() { target += TicksToRiseSpecimen; }
+    public void setTarget(Positions Pos) {
+        switch(Pos) {
+            case LOW_BASKET:
+                setTarget(LowBasketPos);
+                break;
+            case HIGH_BASKET:
+                setTarget(Positions.HIGH_BASKET);
+                break;
+            case LOW_SPECIMEN:
+                setTarget(Positions.LOW_SPECIMEN);
+                break;
+            case HIGH_SPECIMEN:
+                setTarget(Positions.HIGH_SPECIMEN);
+                break;
+        }
+    }
 
     public void update() {
         bruh= false;

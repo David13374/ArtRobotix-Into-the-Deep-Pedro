@@ -13,25 +13,30 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import java.util.concurrent.TimeUnit;
-
+import classes.Intake;
+import classes.Outtake;
+import classes.PIDFArm;
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
-import constants.functions;
 
 @Autonomous
 @Config
 public class AutonomousSpecimen extends OpMode {
 
-    public static PathBuilder builder;
-    public functions f;
-    public static PathChain line1, line2, line3, line4, line5, line6;
+    public interface Runnable {
 
-    public static Follower follower;
+    }
+    private PIDFArm PIDF;
+    private Intake intake;
+    private Outtake outtake;
+    private static PathBuilder builder;
+    private static PathChain line1, line2, line3, line4, line5, line6;
+
+    private static Follower follower;
     public static double path5Time = 1;
 
     public static int pathState = 0;
-    private final Pose startPose = new Pose(7.5, 72, Math.toRadians(180));
+    public static final Pose startPose = new Pose(7.5, 72, Math.toRadians(180));
     Timer pathTimer;
 
     public void autonomousPathUpdate() {
@@ -62,12 +67,14 @@ public class AutonomousSpecimen extends OpMode {
                 break;
             case 4:
                 if (!follower.isBusy()) {
+                    outtake.setWallPos();
                     follower.followPath(line5, true);
                     setPathState(5);
                 }
                 break;
             case 5:
                 if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
+                    outtake.closeOuttakeClaw();
                     follower.followPath(line6, true);
                     setPathState(6);
                 }
@@ -188,6 +195,9 @@ public class AutonomousSpecimen extends OpMode {
     @Override
     public void init() {
         pathTimer = new Timer();
+        intake = new Intake(hardwareMap);
+        outtake = new Outtake(hardwareMap);
+        PIDF = new PIDFArm(hardwareMap, true);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);

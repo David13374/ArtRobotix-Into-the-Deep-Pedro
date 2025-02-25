@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import classes.PIDFArm;
-import constants.constants;
 
 @Config
 @TeleOp(name = "ServoTester")

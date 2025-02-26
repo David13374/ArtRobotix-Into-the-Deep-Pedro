@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Intake {
     ServoImplEx extendoL, extendoR, ClawIntake, ClawRotate, ClawVertical, AxialServoIntake;
@@ -16,6 +17,7 @@ public class Intake {
     public static final double openpos = 0.5, closepos = 0;
     public static double ClawRotateTransferPos = 0.021, ClawVerticalTransferPos = 0.95, AxialServoIntakeTransferPos = 0.15;
     public static double ClawRotateInitPos = 0.63, ClawVerticalInitPos = 0.9, AxialServoIntakeInitPos = 0.1, ExtensionInitPos = 0;
+    public static double timeWristDown = 0.1;
 
     public enum wriststate {
         UP,
@@ -60,7 +62,9 @@ public class Intake {
         ClawVertical.setPosition(Intake.ClawVerticalGrabPos);
         AxialServoIntake.setPosition(Intake.AxialServoIntakeUpPos);
     }
-    public void setWristDown() { AxialServoIntake.setPosition(Intake.AxialServoIntakeDownPos); }
+    public void setWristDown() {
+        AxialServoIntake.setPosition(Intake.AxialServoIntakeDownPos);
+    }
     public void updateState() {
         if(state == extendoState.RETRACTED) {
             state = extendoState.EXTENDED;
@@ -94,6 +98,7 @@ public class Intake {
         }
         else {
             setWristUp();
+            openIntakeClaw();
             wristState = wriststate.UP;
         }
     }
@@ -108,7 +113,7 @@ public class Intake {
         }
     }
 
-    public void update(GamepadEx gamepad) {
+    public void update(GamepadEx gamepad, ElapsedTime timer) {
 
         currentWristPos = gamepad.getRightX() * AxialServoMultiplier;
         currentPosExtendo += gamepad.getRightY() * ExtendoServoMultiplier;
@@ -126,5 +131,8 @@ public class Intake {
             realWristPos = currentWristPos;
             ClawRotate.setPosition(realWristPos);
         }
+
+        if(wristState == wriststate.DOWN && timer.seconds() > timeWristDown)
+            closeIntakeClaw();
     }
 }

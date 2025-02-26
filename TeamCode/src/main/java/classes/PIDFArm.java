@@ -30,7 +30,7 @@ public class PIDFArm {
     double power;
     public ElapsedTime t1;
     public static double inferiorLimit = -0.73, superiorLimit=1;
-    public static double TicksToRiseSpecimen = 125;
+    public static double TicksToRiseSpecimen = 175;
 
     public enum Positions {
         HIGH_BASKET,
@@ -76,13 +76,13 @@ public class PIDFArm {
                 setTarget(LowBasketPos);
                 break;
             case HIGH_BASKET:
-                setTarget(Positions.HIGH_BASKET);
+                setTarget(HighBasketPos);
                 break;
             case LOW_SPECIMEN:
-                setTarget(Positions.LOW_SPECIMEN);
+                setTarget(LowSpecimenPos);
                 break;
             case HIGH_SPECIMEN:
-                setTarget(Positions.HIGH_SPECIMEN);
+                setTarget(HighSpecimenPos);
                 break;
         }
     }

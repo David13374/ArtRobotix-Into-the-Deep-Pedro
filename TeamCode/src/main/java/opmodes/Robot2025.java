@@ -28,7 +28,6 @@ public class Robot2025 extends LinearOpMode {
 
     HzMonitor hz;
     FSM fsm;
-    List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
     @Override
     public void runOpMode() {
@@ -44,10 +43,6 @@ public class Robot2025 extends LinearOpMode {
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         dtMove.resetOdoIMU();
-
-        for (LynxModule hub : allHubs) {
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-        }
 
         while(opModeInInit()) {
             if(gamepad1.a)

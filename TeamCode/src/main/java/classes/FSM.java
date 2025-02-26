@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class FSM {
     public static double reqTime = 0, reqTime2 = 0.15, timeDoneTotal = 0.3, RotatingTime = 0.5;
     public static double highBasketTime = 0.10, lowBasketTime = 0.1;
-    public static double clawOpenTime = 0.1, timeToRaise = 0.125, retractTime = 0.4;
+    public static double clawOpenTime = 0.1, timeToRaise = 0.15, retractTime = 0.3;
     public static double reqTimeA;
     static boolean wristup = true, pressedButton = false, reset = false, transfer = false;
     public PIDFArm PIDF;
@@ -64,8 +64,10 @@ public class FSM {
                 intake.update(driver1gamepad);
             }
         }
-        if (driver1gamepad.wasJustPressed(HardResetButton))
+        if (driver1gamepad.wasJustPressed(HardResetButton)) {
             currentState = robotState.HARDRESET;
+            pressedButton = false;
+        }
         switch (currentState) {
             case READY:
                 if (driver2gamepad.getTrigger(openclaw) != 0)
@@ -73,7 +75,7 @@ public class FSM {
                 if (driver2gamepad.getTrigger(closeclaw) != 0)
                     intake.closeIntakeClaw();
 
-                if (driver2gamepad.wasJustPressed(transferbutton)) {
+                if (driver1gamepad.wasJustPressed(transferbutton)) {
                     reset = false;
                     wristup = false;
                     transfer = true;
@@ -85,7 +87,7 @@ public class FSM {
                 break;
             case MOVING:
                 if (extended) {
-                    intake.retract();
+                    intake.retract(false);
                     if (transfert.seconds() > retractTime) {
                         transfert.reset();
                         extended = false;
@@ -161,15 +163,13 @@ public class FSM {
                     case SPECIMEN:
                         if (!pressedButton && driver2gamepad.wasJustPressed(specimenbutton)) {
                             PIDF.addPosSpec();
-                            if (!pressedButton) {
-                                timer2.reset();
-                                pressedButton = true;
-                            }
+                            timer2.reset();
+                            pressedButton = true;
                         }
                         if (pressedButton) {
                             if (timer2.seconds() > timeToRaise)
                                 outtake.openOuttakeClaw();
-                            if (timer2.seconds() > clawOpenTime) {
+                            if (timer2.seconds() > timeToRaise + clawOpenTime) {
                                 outtake.resetOuttake();
                                 transfert.reset();
                                 currentState = robotState.RETURNING;
@@ -178,8 +178,11 @@ public class FSM {
                         break;
                     case BASKET:
                         if (transfert.seconds() > reqTimeA) {
-                            intake.setExtendoPos();
-                            outtake.setBasketPos();
+                            if(!reset) {
+                                intake.setExtendoPos(Intake.extendomax);
+                                outtake.setBasketPos();
+                                reset = true;
+                            }
                             if (driver2gamepad.wasJustPressed(ReleaseButton)) {
                                 timer2.reset();
                                 pressedButton = true;
@@ -198,6 +201,7 @@ public class FSM {
                 break;
             case RETURNING:
                 if (transfert.seconds() > RotatingTime) {
+                    intake.retract(true);
                     PIDF.retract();
                 }
 
@@ -207,9 +211,13 @@ public class FSM {
                 }
                 break;
             case HARDRESET:
-                intake.retract();
-                outtake.resetOuttake();
-                PIDF.retract();
+                if(!pressedButton) {
+                    intake.retract(true);
+                    outtake.resetOuttake();
+                    PIDF.retract();
+                    outtake.openOuttakeClaw();
+                    pressedButton = true;
+                }
                 if (PIDF.isRetracted()) {
                     currentState = robotState.READY;
                     PIDF.retractReset();

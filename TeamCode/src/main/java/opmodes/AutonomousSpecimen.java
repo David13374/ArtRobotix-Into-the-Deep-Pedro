@@ -30,10 +30,12 @@ public class AutonomousSpecimen extends OpMode {
     private Intake intake;
     private Outtake outtake;
     private static PathBuilder builder;
+
+    public static double wallPointX = 8.5, wallPointY = 34.5;
     private static PathChain line1, line2, line3, line4, line5, line6;
 
     private static Follower follower;
-    public static double path5Time = 1;
+    public static double path5Time = 2.5, path5Time2 = 2;
 
     public static int pathState = 0;
     public static final Pose startPose = new Pose(7.5, 72, Math.toRadians(180));
@@ -69,23 +71,29 @@ public class AutonomousSpecimen extends OpMode {
                 if (!follower.isBusy()) {
                     outtake.setWallPos();
                     follower.followPath(line5, true);
+                    outtake.openOuttakeClaw();
                     setPathState(5);
                 }
                 break;
             case 5:
-                if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
+                if(pathTimer.getElapsedTimeSeconds() >= path5Time2)
                     outtake.closeOuttakeClaw();
+                if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
                     follower.followPath(line6, true);
                     setPathState(6);
                 }
                 break;
             case 6:
                 if (!follower.isBusy()) {
+                    outtake.setWallPos();
                     follower.followPath(line5, true);
+                    outtake.openOuttakeClaw();
                     setPathState(7);
                 }
                 break;
             case 7:
+                if(pathTimer.getElapsedTimeSeconds() >= path5Time2)
+                    outtake.closeOuttakeClaw();
                 if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
                     follower.followPath(line6, true);
                     setPathState(8);
@@ -93,13 +101,25 @@ public class AutonomousSpecimen extends OpMode {
                 break;
             case 8:
                 if (!follower.isBusy()) {
+                    outtake.setWallPos();
                     follower.followPath(line5, true);
+                    outtake.openOuttakeClaw();
                     setPathState(9);
                 }
                 break;
             case 9:
+                if(pathTimer.getElapsedTimeSeconds() >= path5Time2)
+                    outtake.closeOuttakeClaw();
                 if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
                     follower.followPath(line6, true);
+                    setPathState(10);
+                }
+                break;
+            case 10:
+                if (!follower.isBusy()) {
+                    outtake.setWallPos();
+                    follower.followPath(line5, true);
+                    outtake.openOuttakeClaw();
                     setPathState(-1);
                 }
                 break;
@@ -122,13 +142,13 @@ public class AutonomousSpecimen extends OpMode {
                                 new Point(30.000, 72.000, Point.CARTESIAN),
                                 new Point(28.229, 9.914, Point.CARTESIAN),
                                 new Point(40.495, 56.961, Point.CARTESIAN),
-                                new Point(62.131, 22.430, Point.CARTESIAN)
+                                new Point(62.131, 23.5, Point.CARTESIAN)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(0))
                 .addPath(
                         new BezierLine(
-                                new Point(62.131, 22.430, Point.CARTESIAN),
+                                new Point(62.131, 23.5, Point.CARTESIAN),
                                 new Point(14, 22.430, Point.CARTESIAN)
                         )
                 )
@@ -171,7 +191,7 @@ public class AutonomousSpecimen extends OpMode {
         line5 = follower.pathBuilder()
                 .addPath(new BezierLine(
                                 new Point(14, 10.582, Point.CARTESIAN),
-                                new Point(15, 35, Point.CARTESIAN)
+                                new Point(wallPointX, wallPointY, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))

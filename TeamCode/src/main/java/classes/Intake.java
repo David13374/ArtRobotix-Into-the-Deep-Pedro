@@ -1,20 +1,22 @@
 package classes;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+@Config
 public class Intake {
     ServoImplEx extendoL, extendoR, ClawIntake, ClawRotate, ClawVertical, AxialServoIntake;
     public static final double extendomin = 0.1, extendomax = 0.4;
     public static double currentPosExtendo = 0, realPoseExtendo, currentWristPos, realWristPos;
     public double extendedpos = 0.4, retractedpos = 0;
     public static final double AxialServoMultiplier = -0.01, ExtendoServoMultiplier = -0.008;
-    public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.6, ClawVerticalGrabPos = 0;
+    public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.5, ClawVerticalGrabPos = 0;
     public static final double openpos = 0.5, closepos = 0;
-    public static double ClawRotateTransferPos = 0.021, ClawVerticalTransferPos = 0.95, AxialServoIntakeTransferPos = 0.15;
+    public static double ClawRotateTransferPos = 0.021, ClawVerticalTransferPos = 0.88, AxialServoIntakeTransferPos = 0.15;
     public static double ClawRotateInitPos = 0.63, ClawVerticalInitPos = 0.9, AxialServoIntakeInitPos = 0.1, ExtensionInitPos = 0;
 
     public enum wriststate {
@@ -37,6 +39,7 @@ public class Intake {
         extendoR = hardwareMap.get(ServoImplEx.class, "ExtensionR");
 
         extendoL.setDirection(Servo.Direction.REVERSE);
+        ClawVertical.setPwmRange(new PwmControl.PwmRange(500, 2500));
         ClawRotate.setPwmRange(new PwmControl.PwmRange(500, 2500));
 
         ClawIntake.setPosition(openpos);
@@ -67,11 +70,14 @@ public class Intake {
             currentPosExtendo = extendedpos;
             wristState = wriststate.UP;
             currentWristPos = realWristPos = 0.61;
+            ClawRotate.setPosition(currentWristPos);
+            setExtendoPos(currentPosExtendo);
             setWristUp();
         }
         else {
             state = extendoState.RETRACTED;
             currentPosExtendo = retractedpos;
+            setExtendoPos(currentPosExtendo);
             setIntakeTransfer();
         }
         realPoseExtendo = currentPosExtendo;
@@ -97,34 +103,35 @@ public class Intake {
             wristState = wriststate.UP;
         }
     }
-    public void retract() {
-        if(state == extendoState.EXTENDED) {
+    public void retract(boolean a) {
+        if(state == extendoState.EXTENDED || a) {
             setIntakeTransfer();
             state = extendoState.RETRACTED;
-            currentPosExtendo = retractedpos;
-            realPoseExtendo = currentPosExtendo;
+            realPoseExtendo = currentPosExtendo = 0;
             extendoR.setPosition(realPoseExtendo);
             extendoL.setPosition(realPoseExtendo);
         }
     }
 
     public void update(GamepadEx gamepad) {
+        if(state == extendoState.EXTENDED) {
 
-        currentWristPos = gamepad.getRightX() * AxialServoMultiplier;
-        currentPosExtendo += gamepad.getRightY() * ExtendoServoMultiplier;
+            currentWristPos += gamepad.getRightX() * AxialServoMultiplier;
+            currentPosExtendo += gamepad.getRightY() * ExtendoServoMultiplier;
 
-        currentPosExtendo = Math.min(currentPosExtendo, extendomax);
-        currentPosExtendo = Math.max(currentPosExtendo, extendomin);
+            currentPosExtendo = Math.min(currentPosExtendo, extendomax);
+            currentPosExtendo = Math.max(currentPosExtendo, extendomin);
 
-        if(Math.abs(realPoseExtendo - currentPosExtendo) > 0.005) {
-            realPoseExtendo = currentPosExtendo;
-            extendoR.setPosition(realPoseExtendo);
-            extendoL.setPosition(realPoseExtendo);
-        }
+            if (Math.abs(realPoseExtendo - currentPosExtendo) > 0.005) {
+                realPoseExtendo = currentPosExtendo;
+                extendoR.setPosition(realPoseExtendo);
+                extendoL.setPosition(realPoseExtendo);
+            }
 
-        if(Math.abs(realWristPos - currentWristPos) > 0.005) {
-            realWristPos = currentWristPos;
-            ClawRotate.setPosition(realWristPos);
+            if (Math.abs(realWristPos - currentWristPos) > 0.005) {
+                realWristPos = currentWristPos;
+                ClawRotate.setPosition(realWristPos);
+            }
         }
     }
 }

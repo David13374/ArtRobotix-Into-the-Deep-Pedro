@@ -58,10 +58,12 @@ public class FSM {
             }
 
             if (extended) {
-                if (driver1gamepad.wasJustPressed(wristupbutton))
+                if (driver1gamepad.wasJustPressed(wristupbutton)) {
                     intake.updateWristState();
+                    transfert.reset();
+                }
 
-                intake.update(driver1gamepad);
+                intake.update(driver1gamepad, transfert);
             }
         }
         if (driver1gamepad.wasJustPressed(HardResetButton)) {

@@ -17,7 +17,7 @@ import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 @Config
 public class PIDFArm {
     private PIDController controller;
-    public static double LowSpecimenPos = 0, HighSpecimenPos = 400, LowBasketPos = 550, HighBasketPos = 1100;
+    public static double LowSpecimenPos = 0, HighSpecimenPos = 400, SpecimenAutoPos = 600, LowBasketPos = 550, HighBasketPos = 1100;
     public static double p = 0.025, i = 0, d = 0.00018;
 
     public static double target = 0;
@@ -36,7 +36,8 @@ public class PIDFArm {
         HIGH_BASKET,
         LOW_BASKET,
         HIGH_SPECIMEN,
-        LOW_SPECIMEN
+        LOW_SPECIMEN,
+        SPEC_AUTO
     }
     public PIDFArm(HardwareMap hardwareMap, boolean resetEncoder) {
 
@@ -70,6 +71,7 @@ public class PIDFArm {
     public double getPower() { return power; }
     public double getVelocity(){ return armMotorL.getVelocity(); }
     public void addPosSpec() { target += TicksToRiseSpecimen; }
+    public void addPosSpecAuto() { target -= TicksToRiseSpecimen; }
     public void setTarget(Positions Pos) {
         switch(Pos) {
             case LOW_BASKET:
@@ -83,6 +85,9 @@ public class PIDFArm {
                 break;
             case HIGH_SPECIMEN:
                 setTarget(HighSpecimenPos);
+                break;
+            case SPEC_AUTO:
+                setTarget(SpecimenAutoPos);
                 break;
         }
     }

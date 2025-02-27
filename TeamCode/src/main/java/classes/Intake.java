@@ -15,7 +15,7 @@ public class Intake {
     public double extendedpos = 0.4, retractedpos = 0;
     public static final double AxialServoMultiplier = -0.01, ExtendoServoMultiplier = -0.008;
     public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.5, ClawVerticalGrabPos = 0;
-    public static final double openpos = 0.5, closepos = 0;
+    public static double openpos = 0.3, closepos = 0;
     public static double ClawRotateTransferPos = 0.021, ClawVerticalTransferPos = 0.88, AxialServoIntakeTransferPos = 0.15;
     public static double ClawRotateInitPos = 0.63, ClawVerticalInitPos = 0.9, AxialServoIntakeInitPos = 0.1, ExtensionInitPos = 0;
 
@@ -50,20 +50,20 @@ public class Intake {
         extendoR.setPosition(ExtensionInitPos);
     }
 
-    public void openIntakeClaw() { ClawIntake.setPosition(Intake.openpos); }
+    public void openIntakeClaw() { ClawIntake.setPosition(openpos); }
     public void closeIntakeClaw() {
-        ClawIntake.setPosition(Intake.closepos);
+        ClawIntake.setPosition(closepos);
     }
     public void setIntakeTransfer() {
-        AxialServoIntake.setPosition(Intake.AxialServoIntakeTransferPos);
-        ClawRotate.setPosition(Intake.ClawRotateTransferPos);
-        ClawVertical.setPosition(Intake.ClawVerticalTransferPos);
+        AxialServoIntake.setPosition(AxialServoIntakeTransferPos);
+        ClawRotate.setPosition(ClawRotateTransferPos);
+        ClawVertical.setPosition(ClawVerticalTransferPos);
     }
     public void setWristUp() {
-        ClawVertical.setPosition(Intake.ClawVerticalGrabPos);
-        AxialServoIntake.setPosition(Intake.AxialServoIntakeUpPos);
+        ClawVertical.setPosition(ClawVerticalGrabPos);
+        AxialServoIntake.setPosition(AxialServoIntakeUpPos);
     }
-    public void setWristDown() { AxialServoIntake.setPosition(Intake.AxialServoIntakeDownPos); }
+    public void setWristDown() { AxialServoIntake.setPosition(AxialServoIntakeDownPos); }
     public void updateState() {
         if(state == extendoState.RETRACTED) {
             state = extendoState.EXTENDED;

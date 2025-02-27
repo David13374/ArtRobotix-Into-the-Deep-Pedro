@@ -11,6 +11,7 @@ import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import classes.Intake;
@@ -21,25 +22,23 @@ import pedroPathing.constants.LConstants;
 
 @Autonomous
 @Config
-public class AutonomousSpecimen extends OpMode {
-
-    public interface Runnable {
-
-    }
+public class AutonomousSpecimen extends LinearOpMode {
     private PIDFArm PIDF;
     private Intake intake;
     private Outtake outtake;
-    private static PathBuilder builder;
+    private PathBuilder builder;
 
     public static double wallPointX = 8.5, wallPointY = 34.5;
-    private static PathChain line1, line2, line3, line4, line5, line6;
+    private PathChain line1, line2, line3, line4, line5, line6, line7;
 
-    private static Follower follower;
-    public static double path5Time = 2.5, path5Time2 = 2;
+    private Follower follower;
+    public static double path1Time = 5;
+    public static double path5Time = 2.5, path5Time2 = 2, path5TimeP = 1.5, path5TimeP2 = 1, clawOpenTime = 0.1, path6Time2 = 5, timeToRetract = 0.1;
 
-    public static int pathState = 0;
-    public static final Pose startPose = new Pose(7.5, 72, Math.toRadians(180));
+    public int pathState = 0;
+    private  final Pose startPose = new Pose(7.5, 72, Math.toRadians(180));
     Timer pathTimer;
+    private boolean uwu = false;
 
     public void autonomousPathUpdate() {
         switch (pathState) {
@@ -49,7 +48,17 @@ public class AutonomousSpecimen extends OpMode {
                 break;
 
             case 1:
-                if (!follower.isBusy()) {
+                if(pathTimer.getElapsedTimeSeconds() > path1Time) {
+                    if(!uwu) {
+                        uwu = true;
+                        PIDF.addPosSpecAuto();
+                    }
+                    if(pathTimer.getElapsedTimeSeconds() > path1Time + timeToRetract)
+                        outtake.openOuttakeClaw();
+                }
+                if (pathTimer.getElapsedTimeSeconds() > path1Time + timeToRetract + clawOpenTime) {
+                    PIDF.retract();
+                    uwu = false;
                     follower.followPath(line2, true);
                     setPathState(2);
                 }
@@ -76,18 +85,29 @@ public class AutonomousSpecimen extends OpMode {
                 }
                 break;
             case 5:
-                if(pathTimer.getElapsedTimeSeconds() >= path5Time2)
+                if(pathTimer.getElapsedTimeSeconds() >= path5TimeP2)
                     outtake.closeOuttakeClaw();
-                if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
+                if (pathTimer.getElapsedTimeSeconds() >= path5TimeP) {
+                    outtake.setSpecimenPos();
                     follower.followPath(line6, true);
+                    PIDF.setTarget(PIDFArm.Positions.SPEC_AUTO);
                     setPathState(6);
                 }
                 break;
             case 6:
-                if (!follower.isBusy()) {
+                if(pathTimer.getElapsedTimeSeconds() > path6Time2) {
+                    if(!uwu) {
+                        PIDF.addPosSpecAuto();
+                        uwu = true;
+                    }
+                    if(pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract)
+                        outtake.openOuttakeClaw();
+                }
+                if (pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract + clawOpenTime) {
+                    uwu = false;
+                    PIDF.retract();
                     outtake.setWallPos();
-                    follower.followPath(line5, true);
-                    outtake.openOuttakeClaw();
+                    follower.followPath(line7, true);
                     setPathState(7);
                 }
                 break;
@@ -95,15 +115,25 @@ public class AutonomousSpecimen extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds() >= path5Time2)
                     outtake.closeOuttakeClaw();
                 if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
+                    outtake.setSpecimenPos();
                     follower.followPath(line6, true);
                     setPathState(8);
                 }
                 break;
             case 8:
-                if (!follower.isBusy()) {
+                if(pathTimer.getElapsedTimeSeconds() > path6Time2) {
+                    if(!uwu) {
+                        PIDF.addPosSpecAuto();
+                        uwu = true;
+                    }
+                    if(pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract)
+                        outtake.openOuttakeClaw();
+                }
+                if (pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract + clawOpenTime) {
+                    uwu = false;
+                    PIDF.retract();
                     outtake.setWallPos();
-                    follower.followPath(line5, true);
-                    outtake.openOuttakeClaw();
+                    follower.followPath(line7, true);
                     setPathState(9);
                 }
                 break;
@@ -111,19 +141,30 @@ public class AutonomousSpecimen extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds() >= path5Time2)
                     outtake.closeOuttakeClaw();
                 if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
+                    outtake.setSpecimenPos();
                     follower.followPath(line6, true);
                     setPathState(10);
                 }
                 break;
             case 10:
-                if (!follower.isBusy()) {
+                if(pathTimer.getElapsedTimeSeconds() > path6Time2) {
+                    if(!uwu) {
+                        PIDF.addPosSpecAuto();
+                        uwu = true;
+                    }
+                    if(pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract)
+                        outtake.openOuttakeClaw();
+                }
+                if (pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract + clawOpenTime) {
+                    uwu = false;
+                    PIDF.retract();
                     outtake.setWallPos();
-                    follower.followPath(line5, true);
-                    outtake.openOuttakeClaw();
+                    follower.followPath(line7, true);
                     setPathState(-1);
                 }
                 break;
         }
+        PIDF.update();
     }
 
     public void buildPaths() {
@@ -205,6 +246,22 @@ public class AutonomousSpecimen extends OpMode {
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
                 .build();
+        line7 = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Point(30, 67, Point.CARTESIAN),
+                                new Point(wallPointX + 5, wallPointY + 5, Point.CARTESIAN)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(0))
+                .addPath(
+                        new BezierLine(
+                                new Point(wallPointX + 5, wallPointY + 5, Point.CARTESIAN),
+                                new Point(wallPointX, wallPointY, Point.CARTESIAN)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .build();
     }
 
     public void setPathState(int pState) {
@@ -212,30 +269,37 @@ public class AutonomousSpecimen extends OpMode {
         pathTimer.resetTimer();
     }
 
+
     @Override
-    public void init() {
+    public void runOpMode() {
         pathTimer = new Timer();
         intake = new Intake(hardwareMap);
         outtake = new Outtake(hardwareMap);
         PIDF = new PIDFArm(hardwareMap, true);
+        PIDF.setTarget(0);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
         setPathState(0);
         buildPaths();
-    }
+        uwu = false;
+        while(opModeInInit()) {
+            if(gamepad1.b)
+                outtake.closeOuttakeClaw();
+        }
 
-    @Override
-    public void loop() {
-        follower.update();
-        autonomousPathUpdate();
+        outtake.setSpecimenPos();
+        while(opModeIsActive()) {
+            follower.update();
+            autonomousPathUpdate();
 
-        // Feedback to Driver Hub
-        telemetry.addData("path state", pathState);
-        telemetry.addData("x", follower.getPose().getX());
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.update();
+            // Feedback to Driver Hub
+            telemetry.addData("path state", pathState);
+            telemetry.addData("x", follower.getPose().getX());
+            telemetry.addData("y", follower.getPose().getY());
+            telemetry.addData("heading", follower.getPose().getHeading());
+            telemetry.update();
+        }
     }
 }

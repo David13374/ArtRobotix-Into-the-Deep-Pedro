@@ -16,13 +16,14 @@ public class ServoTester extends LinearOpMode {
     public static double ClawIntakeInitPos = 0.3, ClawRotateInitPos = 0.63, ClawVerticalInitPos = 0.9, AxialServoIntakeInitPos = 0.1, ExtensionInitPos = 0, ClawOuttakeInitPos = 0.8, AxialServoOuttakeInitPos = 0.8, ArmServoInitPos = 0.77;
     public ServoImplEx ClawOuttake, AxialServoOuttake, ArmServo;
     public ServoImplEx ClawIntake, ClawRotate, ClawVertical, AxialServoIntake, ExtensionR, ExtensionL;
+    public static boolean useLeft = true, useRight = true;
     PIDFArm PIDF;
 
     public static double targetPos = 0;
     @Override
     public void runOpMode() {
         ClawIntake = hardwareMap.get(ServoImplEx.class, "ClawIntake");
-        //ClawOuttake = hardwareMap.get(ServoImplEx.class, "ClawOuttake");
+        ClawOuttake = hardwareMap.get(ServoImplEx.class, "ClawOuttake");
         ClawRotate = hardwareMap.get(ServoImplEx.class, "ClawRotate");
         ClawVertical = hardwareMap.get(ServoImplEx.class, "ClawVertical");
         AxialServoIntake = hardwareMap.get(ServoImplEx.class, "AxialServoIntake");
@@ -40,14 +41,16 @@ public class ServoTester extends LinearOpMode {
 
         while(opModeIsActive()) {
             ClawIntake.setPosition(ClawIntakeInitPos);
-            //ClawOuttake.setPosition(ClawOuttakeInitPos);
+            ClawOuttake.setPosition(ClawOuttakeInitPos);
             ClawRotate.setPosition(ClawRotateInitPos);
             ClawVertical.setPosition(ClawVerticalInitPos);
             AxialServoIntake.setPosition(AxialServoIntakeInitPos);
             AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
             ArmServo.setPosition(ArmServoInitPos);
-            ExtensionL.setPosition(ExtensionInitPos);
-            ExtensionR.setPosition(ExtensionInitPos);
+            if(useLeft)
+                ExtensionL.setPosition(ExtensionInitPos);
+            if(useRight)
+                ExtensionR.setPosition(ExtensionInitPos);
             PIDF.setTarget(targetPos);
             PIDF.update();
         }

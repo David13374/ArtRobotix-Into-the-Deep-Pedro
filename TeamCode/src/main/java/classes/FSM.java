@@ -22,14 +22,14 @@ public class FSM {
     robotState currentState = robotState.READY;
     GamepadKeys.Button
             extendbuttonspecimen = GamepadKeys.Button.LEFT_BUMPER,
-            transferbutton = GamepadKeys.Button.DPAD_DOWN,
+            transferbutton = GamepadKeys.Button.A,
             specimenhighbutton = GamepadKeys.Button.DPAD_UP,
             specimenlowbutton = GamepadKeys.Button.DPAD_RIGHT,
             highbasketbutton = GamepadKeys.Button.Y,
             lowbasketbutton = GamepadKeys.Button.X,
             specimenbutton = GamepadKeys.Button.RIGHT_BUMPER,
             wristupbutton = GamepadKeys.Button.X,
-            ReleaseButton = GamepadKeys.Button.LEFT_BUMPER,
+            ReleaseButton = GamepadKeys.Button.RIGHT_BUMPER,
             ResetTransferButton = GamepadKeys.Button.DPAD_LEFT,
             HardResetButton = GamepadKeys.Button.RIGHT_STICK_BUTTON;
     GamepadKeys.Trigger openclaw = GamepadKeys.Trigger.RIGHT_TRIGGER,

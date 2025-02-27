@@ -15,7 +15,7 @@ public class Intake {
     public double extendedpos = 0.4, retractedpos = 0;
     public static final double AxialServoMultiplier = -0.01, ExtendoServoMultiplier = -0.008;
     public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.5, ClawVerticalGrabPos = 0;
-    public static double openpos = 0.3, closepos = 0;
+    public static double openpos = 0.5, closepos = 0.1;
     public static double ClawRotateTransferPos = 0.021, ClawVerticalTransferPos = 0.88, AxialServoIntakeTransferPos = 0.15;
     public static double ClawRotateInitPos = 0.63, ClawVerticalInitPos = 0.9, AxialServoIntakeInitPos = 0.1, ExtensionInitPos = 0;
 

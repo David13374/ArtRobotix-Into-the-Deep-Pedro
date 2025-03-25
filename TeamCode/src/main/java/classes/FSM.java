@@ -63,7 +63,7 @@ public class FSM {
                     transfert.reset();
                 }
 
-                intake.update(driver1gamepad, transfert);
+                intake.update(driver1gamepad);
             }
         }
         if (driver1gamepad.wasJustPressed(HardResetButton)) {
@@ -163,6 +163,7 @@ public class FSM {
                         }
                         break;
                     case SPECIMEN:
+                        intake.setExtendoPos(Intake.extendomax);
                         if (!pressedButton && driver2gamepad.wasJustPressed(specimenbutton)) {
                             PIDF.addPosSpec();
                             timer2.reset();
@@ -215,6 +216,7 @@ public class FSM {
             case HARDRESET:
                 if(!pressedButton) {
                     intake.retract(true);
+                    extended = false;
                     outtake.resetOuttake();
                     PIDF.retract();
                     outtake.openOuttakeClaw();

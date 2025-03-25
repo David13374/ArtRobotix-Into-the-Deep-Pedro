@@ -28,12 +28,12 @@ public class AutonomousSpecimen extends LinearOpMode {
     private Outtake outtake;
     private PathBuilder builder;
 
-    public static double wallPointX = 8.5, wallPointY = 34.5;
+    public static double wallPointX = 8.5, wallPointY = 34.5, specimenX = 35, specimenY =  72;
     private PathChain line1, line2, line3, line4, line5, line6, line7;
 
     private Follower follower;
-    public static double path1Time = 5;
-    public static double path5Time = 2.5, path5Time2 = 2, path5TimeP = 1.5, path5TimeP2 = 1, clawOpenTime = 0.1, path6Time2 = 5, timeToRetract = 0.1;
+    public static double path1Time = 3, retractTime = 0.1;
+    public static double path5Time = 2.5, path5Time2 = 2, path5TimeP = 1.5, path5TimeP2 = 1, clawOpenTime = 0.1, path6Time2 = 5, timeToRetract = 0.2;
 
     public int pathState = 0;
     private  final Pose startPose = new Pose(7.5, 72, Math.toRadians(180));
@@ -46,13 +46,11 @@ public class AutonomousSpecimen extends LinearOpMode {
                 follower.followPath(line1);
                 setPathState(1);
                 break;
-
             case 1:
+                PIDF.setTarget(PIDFArm.Positions.SPEC_AUTO);
                 if(pathTimer.getElapsedTimeSeconds() > path1Time) {
-                    if(!uwu) {
-                        uwu = true;
-                        PIDF.addPosSpecAuto();
-                    }
+                    uwu = true;
+                    PIDF.setTarget(PIDFArm.SpecimenAutoPos - PIDFArm.TicksForSpecimenAuto);
                     if(pathTimer.getElapsedTimeSeconds() > path1Time + timeToRetract)
                         outtake.openOuttakeClaw();
                 }
@@ -85,6 +83,8 @@ public class AutonomousSpecimen extends LinearOpMode {
                 }
                 break;
             case 5:
+                if(pathTimer.getElapsedTimeSeconds() > retractTime)
+                    PIDF.retract();
                 if(pathTimer.getElapsedTimeSeconds() >= path5TimeP2)
                     outtake.closeOuttakeClaw();
                 if (pathTimer.getElapsedTimeSeconds() >= path5TimeP) {
@@ -96,22 +96,20 @@ public class AutonomousSpecimen extends LinearOpMode {
                 break;
             case 6:
                 if(pathTimer.getElapsedTimeSeconds() > path6Time2) {
-                    if(!uwu) {
-                        PIDF.addPosSpecAuto();
-                        uwu = true;
-                    }
+                    PIDF.setTarget(PIDFArm.SpecimenAutoPos - PIDFArm.TicksForSpecimenAuto);
                     if(pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract)
                         outtake.openOuttakeClaw();
                 }
                 if (pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract + clawOpenTime) {
                     uwu = false;
-                    PIDF.retract();
                     outtake.setWallPos();
                     follower.followPath(line7, true);
                     setPathState(7);
                 }
                 break;
             case 7:
+                if(pathTimer.getElapsedTimeSeconds() > retractTime)
+                    PIDF.retract();
                 if(pathTimer.getElapsedTimeSeconds() >= path5Time2)
                     outtake.closeOuttakeClaw();
                 if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
@@ -122,22 +120,20 @@ public class AutonomousSpecimen extends LinearOpMode {
                 break;
             case 8:
                 if(pathTimer.getElapsedTimeSeconds() > path6Time2) {
-                    if(!uwu) {
-                        PIDF.addPosSpecAuto();
-                        uwu = true;
-                    }
+                    PIDF.setTarget(PIDFArm.SpecimenAutoPos - PIDFArm.TicksForSpecimenAuto);
                     if(pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract)
                         outtake.openOuttakeClaw();
                 }
                 if (pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract + clawOpenTime) {
                     uwu = false;
-                    PIDF.retract();
                     outtake.setWallPos();
                     follower.followPath(line7, true);
                     setPathState(9);
                 }
                 break;
             case 9:
+                if(pathTimer.getElapsedTimeSeconds() > retractTime)
+                    PIDF.retract();
                 if(pathTimer.getElapsedTimeSeconds() >= path5Time2)
                     outtake.closeOuttakeClaw();
                 if (pathTimer.getElapsedTimeSeconds() >= path5Time) {
@@ -148,10 +144,7 @@ public class AutonomousSpecimen extends LinearOpMode {
                 break;
             case 10:
                 if(pathTimer.getElapsedTimeSeconds() > path6Time2) {
-                    if(!uwu) {
-                        PIDF.addPosSpecAuto();
-                        uwu = true;
-                    }
+                    PIDF.setTarget(PIDFArm.SpecimenAutoPos - PIDFArm.TicksForSpecimenAuto);
                     if(pathTimer.getElapsedTimeSeconds() > path6Time2 + timeToRetract)
                         outtake.openOuttakeClaw();
                 }
@@ -172,7 +165,7 @@ public class AutonomousSpecimen extends LinearOpMode {
                 .addPath(
                         new BezierLine(
                                 new Point(0.897, 72.000, Point.CARTESIAN),
-                                new Point(30, 72.000, Point.CARTESIAN)
+                                new Point(specimenX, specimenY, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -180,7 +173,7 @@ public class AutonomousSpecimen extends LinearOpMode {
         line2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Point(30.000, 72.000, Point.CARTESIAN),
+                                new Point(specimenX, specimenY, Point.CARTESIAN),
                                 new Point(28.229, 9.914, Point.CARTESIAN),
                                 new Point(40.495, 56.961, Point.CARTESIAN),
                                 new Point(62.131, 23.5, Point.CARTESIAN)
@@ -241,7 +234,7 @@ public class AutonomousSpecimen extends LinearOpMode {
                 .addPath(
                         new BezierLine(
                                 new Point(15, 35, Point.CARTESIAN),
-                                new Point(30, 67, Point.CARTESIAN)
+                                new Point(specimenX, specimenY, Point.CARTESIAN)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
@@ -249,7 +242,7 @@ public class AutonomousSpecimen extends LinearOpMode {
         line7 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Point(30, 67, Point.CARTESIAN),
+                                new Point(specimenX, specimenY, Point.CARTESIAN),
                                 new Point(wallPointX + 5, wallPointY + 5, Point.CARTESIAN)
                         )
                 )
@@ -278,8 +271,7 @@ public class AutonomousSpecimen extends LinearOpMode {
         PIDF = new PIDFArm(hardwareMap, true);
         PIDF.setTarget(0);
 
-        Constants.setConstants(FConstants.class, LConstants.class);
-        follower = new Follower(hardwareMap);
+        follower = new Follower(hardwareMap, FConstants.class, LConstants.class);
         follower.setStartingPose(startPose);
         setPathState(0);
         buildPaths();
@@ -295,6 +287,7 @@ public class AutonomousSpecimen extends LinearOpMode {
             autonomousPathUpdate();
 
             // Feedback to Driver Hub
+            telemetry.addData("target", PIDF.getTarget());
             telemetry.addData("path state", pathState);
             telemetry.addData("x", follower.getPose().getX());
             telemetry.addData("y", follower.getPose().getY());

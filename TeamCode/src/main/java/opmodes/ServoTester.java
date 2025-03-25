@@ -17,6 +17,7 @@ public class ServoTester extends LinearOpMode {
     public ServoImplEx ClawOuttake, AxialServoOuttake, ArmServo;
     public ServoImplEx ClawIntake, ClawRotate, ClawVertical, AxialServoIntake, ExtensionR, ExtensionL;
     public static boolean useLeft = true, useRight = true;
+    public static double difference = 0.03;
     PIDFArm PIDF;
 
     public static double targetPos = 0;
@@ -34,6 +35,8 @@ public class ServoTester extends LinearOpMode {
 
         ExtensionL.setDirection(Servo.Direction.REVERSE);
         ClawRotate.setPwmRange(new PwmControl.PwmRange(500, 2500));
+        ExtensionL.setPwmRange(new PwmControl.PwmRange(500, 2500));
+        ExtensionR.setPwmRange(new PwmControl.PwmRange(500, 2500));
 
         PIDF = new PIDFArm(hardwareMap, true);
 
@@ -48,7 +51,7 @@ public class ServoTester extends LinearOpMode {
             AxialServoOuttake.setPosition(AxialServoOuttakeInitPos);
             ArmServo.setPosition(ArmServoInitPos);
             if(useLeft)
-                ExtensionL.setPosition(ExtensionInitPos);
+                ExtensionL.setPosition(ExtensionInitPos + difference);
             if(useRight)
                 ExtensionR.setPosition(ExtensionInitPos);
             PIDF.setTarget(targetPos);

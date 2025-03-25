@@ -12,12 +12,13 @@ public class Intake {
     ServoImplEx extendoL, extendoR, ClawIntake, ClawRotate, ClawVertical, AxialServoIntake;
     public static final double extendomin = 0.1, extendomax = 0.4;
     public static double currentPosExtendo = 0, realPoseExtendo, currentWristPos, realWristPos;
-    public double extendedpos = 0.4, retractedpos = 0;
+    public double extendedpos = 0.4, retractedpos = 0.05;
     public static final double AxialServoMultiplier = -0.01, ExtendoServoMultiplier = -0.008;
-    public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.5, ClawVerticalGrabPos = 0;
+    public static double AxialServoIntakeUpPos = 0.45, AxialServoIntakeDownPos = 0.57, ClawVerticalGrabPos = 0;
     public static double openpos = 0.5, closepos = 0.1;
-    public static double ClawRotateTransferPos = 0.021, ClawVerticalTransferPos = 0.88, AxialServoIntakeTransferPos = 0.15;
+    public static double ClawRotateTransferPos   = 0.021, ClawVerticalTransferPos = 0.88, AxialServoIntakeTransferPos = 0.18;
     public static double ClawRotateInitPos = 0.63, ClawVerticalInitPos = 0.9, AxialServoIntakeInitPos = 0.1, ExtensionInitPos = 0;
+    public static double difference = 0.03; 
 
     public enum wriststate {
         UP,
@@ -41,12 +42,14 @@ public class Intake {
         extendoL.setDirection(Servo.Direction.REVERSE);
         ClawVertical.setPwmRange(new PwmControl.PwmRange(500, 2500));
         ClawRotate.setPwmRange(new PwmControl.PwmRange(500, 2500));
+        extendoL.setPwmRange(new PwmControl.PwmRange(500, 2500));
+        extendoR.setPwmRange(new PwmControl.PwmRange(500, 2500));
 
         ClawIntake.setPosition(openpos);
         ClawRotate.setPosition(ClawRotateInitPos);
         ClawVertical.setPosition(ClawVerticalInitPos);
         AxialServoIntake.setPosition(AxialServoIntakeInitPos);
-        extendoL.setPosition(ExtensionInitPos);
+        extendoL.setPosition(ExtensionInitPos + difference);
         extendoR.setPosition(ExtensionInitPos);
     }
 
@@ -84,12 +87,12 @@ public class Intake {
     }
 
     public void setExtendoPos(double pos) {
-        extendoL.setPosition(pos);
+        extendoL.setPosition(pos + difference);
         extendoR.setPosition(pos);
     }
     public void setExtendoPos() {
         double pos = (extendedpos + retractedpos) / 2;
-        extendoL.setPosition(pos);
+        extendoL.setPosition(pos + difference);
         extendoR.setPosition(pos);
     }
 
@@ -109,7 +112,7 @@ public class Intake {
             state = extendoState.RETRACTED;
             realPoseExtendo = currentPosExtendo = 0;
             extendoR.setPosition(realPoseExtendo);
-            extendoL.setPosition(realPoseExtendo);
+            extendoL.setPosition(realPoseExtendo + difference);
         }
     }
 
@@ -125,7 +128,7 @@ public class Intake {
             if (Math.abs(realPoseExtendo - currentPosExtendo) > 0.005) {
                 realPoseExtendo = currentPosExtendo;
                 extendoR.setPosition(realPoseExtendo);
-                extendoL.setPosition(realPoseExtendo);
+                extendoL.setPosition(realPoseExtendo + difference);
             }
 
             if (Math.abs(realWristPos - currentWristPos) > 0.005) {
